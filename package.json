@@ -4,7 +4,7 @@
     "description": "কৃষকবাজার — Farmer to Buyer Platform API",
     "main": "src/server.js",
     "scripts": {
-        "start": "node src/server.js",
+        "start": "npm run migrate && node src/server.js",
         "dev": "nodemon src/server.js",
         "migrate": "node src/config/migrate.js",
         "seed": "node src/config/seed.js"
