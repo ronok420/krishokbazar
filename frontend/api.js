@@ -7,7 +7,7 @@
  */
 
 // ─── Backend URL ── Railway deploy হলে এটা বদলান ────
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'https://krishokbazar.onrender.com/api';
 const SOCKET_BASE = API_BASE.replace('/api', '');
 let chatSocket = null;
 let chatSocketBound = false;

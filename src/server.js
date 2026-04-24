@@ -21,12 +21,7 @@ const allowedOrigins = (process.env.FRONTEND_URL || '')
   .filter(Boolean);
 
 app.use(cors({
-  origin(origin, callback) {
-    // Allow non-browser clients and local file:// testing (origin === "null")
-    if (!origin || origin === 'null') return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
+  origin: true, // Allow all origins (reflects request origin to support credentials)
   credentials: true,
 }));
 app.use(express.json());
