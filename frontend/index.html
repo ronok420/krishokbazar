@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>কৃষকবাজার | KrishokBazar v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #071426;
+  --blue: #0f2d5e;
+  --mid-blue: #1d4ed8;
+  --sky: #3b82f6;
+  --light-blue: #dbeafe;
+  --accent: #f59e0b;
+  --accent-light: #fef3c7;
+  --green: #15803d;
+  --green-mid: #16a34a;
+  --green-light: #dcfce7;
+  --teal: #0d9488;
+  --red: #dc2626;
+  --white: #ffffff;
+  --off-white: #f6f9ff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-600: #475569;
+  --gray-800: #1e293b;
+  --shadow-sm: 0 1px 4px rgba(7,20,38,0.07);
+  --shadow-md: 0 4px 20px rgba(7,20,38,0.12);
+  --shadow-lg: 0 12px 48px rgba(7,20,38,0.18);
+  --shadow-xl: 0 24px 64px rgba(7,20,38,0.24);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans','Hind Siliguri',sans-serif;background:var(--off-white);color:var(--gray-800);min-height:100vh;overflow-x:hidden;}
+
+/* ── PAGES ── */
+.page{display:none;min-height:100vh;animation:fadeIn .3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--gray-100);}
+::-webkit-scrollbar-thumb{background:var(--mid-blue);border-radius:3px;}
+
+/* ══════════════════ NAVBAR ══════════════════ */
+.navbar{
+  background:var(--navy);
+  height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;
+  position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 24px rgba(0,0,0,0.35);
+}
+.nav-logo{
+  font-family:'Playfair Display',serif;
+  color:white;font-size:1.3rem;font-weight:900;
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  letter-spacing:-0.02em;
+}
+.nav-logo em{color:var(--accent);font-style:normal;}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nb{background:none;border:none;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;padding:7px 12px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nb:hover,.nb.on{background:rgba(59,130,246,.18);color:white;}
+.nb.cta{background:var(--mid-blue);color:white;margin-left:4px;}
+.nb.cta:hover{background:var(--sky);}
+
+/* ── VOICE BTN ── */
+.voice-fab{
+  position:fixed;bottom:2rem;right:2rem;z-index:300;
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--mid-blue),var(--teal));
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;
+  box-shadow:0 4px 20px rgba(29,78,216,.4);
+  transition:all .25s;
+  animation:pulse-ring 2.5s infinite;
+}
+.voice-fab:hover{transform:scale(1.1);box-shadow:0 8px 32px rgba(29,78,216,.5);}
+.voice-fab.listening{background:linear-gradient(135deg,#dc2626,#f97316);animation:pulse-ring-red 1s infinite;}
+@keyframes pulse-ring{0%,100%{box-shadow:0 4px 20px rgba(29,78,216,.4),0 0 0 0 rgba(29,78,216,.3);}50%{box-shadow:0 4px 20px rgba(29,78,216,.4),0 0 0 12px rgba(29,78,216,0);}}
+@keyframes pulse-ring-red{0%,100%{box-shadow:0 4px 20px rgba(220,38,38,.4),0 0 0 0 rgba(220,38,38,.4);}50%{box-shadow:0 4px 20px rgba(220,38,38,.4),0 0 0 16px rgba(220,38,38,0);}}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 22px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .22s;border:none;text-decoration:none;white-space:nowrap;}
+.btn-primary{background:var(--mid-blue);color:white;}
+.btn-primary:hover{background:#1e40af;transform:translateY(-1px);box-shadow:var(--shadow-md);}
+.btn-accent{background:var(--accent);color:var(--navy);}
+.btn-accent:hover{background:#d97706;transform:translateY(-1px);}
+.btn-green{background:var(--green);color:white;}
+.btn-green:hover{background:#166534;}
+.btn-outline{background:transparent;border:2px solid var(--mid-blue);color:var(--mid-blue);}
+.btn-outline:hover{background:var(--mid-blue);color:white;}
+.btn-ghost{background:var(--gray-100);color:var(--gray-600);}
+.btn-ghost:hover{background:var(--gray-200);}
+.btn-danger{background:#fee2e2;color:var(--red);}
+.btn-danger:hover{background:var(--red);color:white;}
+.btn-sm{padding:7px 14px;font-size:.78rem;}
+.btn-lg{padding:15px 30px;font-size:.95rem;}
+.btn-full{width:100%;}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:1.1rem;}
+.form-label{display:block;font-size:.8rem;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.02em;text-transform:uppercase;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 15px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans','Hind Siliguri',sans-serif;font-size:.875rem;color:var(--gray-800);background:white;transition:border-color .2s,box-shadow .2s;outline:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--mid-blue);box-shadow:0 0 0 3px rgba(29,78,216,.1);}
+.form-textarea{resize:vertical;min-height:90px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:700;letter-spacing:.02em;}
+.badge-blue{background:var(--light-blue);color:var(--blue);}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-amber{background:var(--accent-light);color:#92400e;}
+.badge-red{background:#fee2e2;color:var(--red);}
+.badge-teal{background:#ccfbf1;color:var(--teal);}
+.badge-verified{background:linear-gradient(135deg,#dbeafe,#dcfce7);color:#1d4ed8;border:1px solid #93c5fd;}
+
+/* ── CARD ── */
+.card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);overflow:hidden;transition:box-shadow .25s,transform .25s;}
+.card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+
+/* ══════════════════════════════════════════
+   HOME PAGE
+══════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(140deg,var(--navy) 0%,#0d2a5e 55%,#1a4080 100%);
+  padding:4.5rem 2rem 5.5rem;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 70% 40%,rgba(59,130,246,.15) 0%,transparent 70%);
+}
+.hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;}
+.hero-inner{max-width:880px;margin:0 auto;text-align:center;position:relative;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:#fcd34d;padding:5px 14px;border-radius:50px;font-size:.75rem;font-weight:600;margin-bottom:1.5rem;backdrop-filter:blur(8px);}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.6rem);font-weight:900;color:white;line-height:1.12;margin-bottom:1.2rem;letter-spacing:-.02em;}
+.hero h1 .hl{color:var(--accent);}
+.hero-sub{font-size:1.05rem;color:rgba(255,255,255,.7);max-width:560px;margin:0 auto 2.5rem;line-height:1.75;}
+.hero-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.hero-wave{position:absolute;bottom:-2px;left:0;right:0;}
+
+/* WEATHER STRIP */
+.weather-strip{
+  background:linear-gradient(90deg,#0f2d5e,#1d4ed8);
+  padding:.8rem 2rem;
+  display:flex;align-items:center;gap:2rem;
+  overflow-x:auto;white-space:nowrap;
+}
+.weather-strip::-webkit-scrollbar{height:0;}
+.weather-loc{color:rgba(255,255,255,.5);font-size:.75rem;margin-right:.5rem;}
+.weather-item{display:flex;align-items:center;gap:.5rem;color:white;font-size:.82rem;font-weight:500;}
+.weather-item .wi{font-size:1.2rem;}
+.weather-divider{width:1px;height:20px;background:rgba(255,255,255,.2);flex-shrink:0;}
+
+/* STATS BAR */
+.stats-bar{background:white;border-bottom:1px solid var(--gray-200);padding:1.25rem 2rem;}
+.stats-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--mid-blue);}
+.stat-lbl{font-size:.72rem;color:var(--gray-400);margin-top:2px;}
+
+.section{padding:3.5rem 2rem;}
+.section-inner{max-width:1080px;margin:0 auto;}
+.sec-title{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--navy);text-align:center;margin-bottom:.4rem;}
+.sec-sub{text-align:center;color:var(--gray-400);margin-bottom:2.5rem;font-size:.88rem;}
+
+/* ── MARKET PRICE TICKER ── */
+.market-ticker{
+  background:var(--navy);
+  padding:.6rem 0;
+  overflow:hidden;
+  position:relative;
+}
+.ticker-label{
+  position:absolute;left:0;top:0;bottom:0;
+  background:var(--accent);
+  color:var(--navy);
+  font-size:.72rem;font-weight:800;
+  display:flex;align-items:center;padding:0 14px;
+  z-index:2;letter-spacing:.05em;
+}
+.ticker-track{
+  display:flex;gap:2.5rem;
+  animation:ticker 28s linear infinite;
+  padding-left:120px;
+  white-space:nowrap;
+}
+.ticker-track:hover{animation-play-state:paused;}
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}  }
+.ticker-item{display:inline-flex;align-items:center;gap:.5rem;color:rgba(255,255,255,.85);font-size:.78rem;font-weight:500;}
+.ticker-item .t-name{color:var(--gray-400);}
+.ticker-item .t-price{color:white;font-weight:700;}
+.ticker-item .t-up{color:#4ade80;font-size:.68rem;}
+.ticker-item .t-down{color:#f87171;font-size:.68rem;}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;}
+.how-card{background:white;border-radius:var(--radius-lg);padding:1.75rem 1.5rem;text-align:center;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);position:relative;transition:all .25s;}
+.how-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+.how-step{position:absolute;top:-12px;left:1.5rem;background:var(--mid-blue);color:white;width:26px;height:26px;border-radius:50%;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.how-icon{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 1rem;}
+.how-icon.blue{background:var(--light-blue);}
+.how-icon.amber{background:var(--accent-light);}
+.how-icon.green{background:var(--green-light);}
+.how-icon.teal{background:#ccfbf1;}
+.how-card h3{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:.4rem;}
+.how-card p{font-size:.8rem;color:var(--gray-600);line-height:1.6;}
+
+/* ROLES */
+.roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+.role-card{background:white;border-radius:var(--radius-xl);padding:2rem;border:2px solid var(--gray-200);text-align:center;cursor:pointer;transition:all .25s;}
+.role-card:hover{border-color:var(--mid-blue);box-shadow:var(--shadow-lg);}
+.role-emoji{font-size:3rem;margin-bottom:1rem;}
+.role-card h3{font-size:1.15rem;font-weight:700;color:var(--navy);margin-bottom:.5rem;}
+.role-card p{font-size:.82rem;color:var(--gray-600);margin-bottom:1.5rem;line-height:1.65;}
+
+/* FOOTER CTA */
+.footer-cta{background:linear-gradient(140deg,var(--navy),#0d2a5e);padding:3.5rem 2rem;text-align:center;color:white;}
+.footer-cta h2{font-family:'Playfair Display',serif;font-size:1.9rem;margin-bottom:.6rem;}
+.footer-cta p{color:rgba(255,255,255,.65);margin-bottom:2rem;}
+
+/* ══════════════════════════════════════════
+   AUTH PAGE
+══════════════════════════════════════════ */
+#page-auth{background:linear-gradient(140deg,var(--navy) 0%,#0d2a5e 100%);}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-box{background:white;border-radius:var(--radius-xl);box-shadow:var(--shadow-xl);width:100%;max-width:440px;overflow:hidden;}
+.auth-head{background:linear-gradient(135deg,var(--navy),var(--blue));padding:1.75rem;text-align:center;color:white;}
+.auth-logo-t{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;}
+.auth-logo-t em{color:var(--accent);font-style:normal;}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--gray-200);}
+.auth-tab{padding:.9rem;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;color:var(--gray-400);cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.auth-tab.active{color:var(--mid-blue);border-bottom-color:var(--mid-blue);}
+.auth-body{padding:1.75rem;}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;}
+.role-opt{border:2px solid var(--gray-200);border-radius:var(--radius);padding:.75rem;text-align:center;cursor:pointer;transition:all .2s;}
+.role-opt:hover{border-color:var(--sky);}
+.role-opt.sel{border-color:var(--mid-blue);background:var(--light-blue);}
+.role-opt .ri{font-size:1.4rem;margin-bottom:3px;}
+.role-opt .rn{font-size:.75rem;font-weight:700;color:var(--gray-600);}
+
+/* ══════════════════════════════════════════
+   PRODUCT LISTING
+══════════════════════════════════════════ */
+.pg-head{background:white;border-bottom:1px solid var(--gray-200);padding:1.25rem 2rem;}
+.pg-head-in{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.pg-title{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--navy);}
+.pg-title small{display:block;font-family:'DM Sans',sans-serif;font-size:.75rem;color:var(--gray-400);font-weight:400;}
+
+.filter-bar{background:white;border-bottom:1px solid var(--gray-200);padding:.9rem 2rem;}
+.filter-in{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:220px;position:relative;}
+.search-wrap input{padding-left:40px;}
+.search-icon-abs{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--gray-400);}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;}
+.chip{padding:5px 13px;border-radius:50px;border:2px solid var(--gray-200);background:white;font-size:.75rem;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all .2s;}
+.chip:hover,.chip.on{border-color:var(--mid-blue);background:var(--light-blue);color:var(--mid-blue);}
+
+.prod-main{max-width:1200px;margin:2rem auto;padding:0 2rem;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;}
+
+.prod-card{background:white;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);transition:all .25s;position:relative;}
+.prod-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);}
+.prod-img{height:185px;display:block;position:relative;overflow:hidden;}
+.prod-tags-overlay{position:absolute;top:.75rem;left:.75rem;display:flex;gap:.3rem;flex-wrap:wrap;}
+.prod-body{padding:1.1rem;}
+.prod-name{font-weight:800;font-size:1rem;color:var(--navy);margin-bottom:3px;}
+.prod-farmer{font-size:.75rem;color:var(--gray-400);margin-bottom:.7rem;display:flex;align-items:center;gap:4px;}
+.prod-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;}
+.prod-price{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--mid-blue);}
+.prod-price small{font-family:'DM Sans',sans-serif;font-size:.65rem;color:var(--gray-400);font-weight:400;}
+.prod-info-row{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.9rem;}
+.prod-foot{display:flex;gap:.4rem;}
+
+/* MARKET PRICE PANEL */
+.market-panel{
+  background:white;border-radius:var(--radius-lg);border:1px solid var(--gray-200);
+  padding:1.5rem;margin-bottom:2rem;
+}
+.market-panel h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--navy);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;}
+.market-item{
+  background:var(--off-white);border-radius:var(--radius);padding:1rem;
+  border:1px solid var(--gray-200);text-align:center;cursor:pointer;transition:all .2s;
+}
+.market-item:hover{border-color:var(--mid-blue);background:var(--light-blue);}
+.market-item .m-icon{font-size:1.6rem;margin-bottom:.35rem;}
+.market-item .m-name{font-size:.75rem;font-weight:700;color:var(--gray-600);}
+.market-item .m-price{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--mid-blue);margin-top:2px;}
+.market-item .m-change{font-size:.65rem;font-weight:700;margin-top:2px;}
+.m-up{color:var(--green-mid);}
+.m-down{color:var(--red);}
+
+/* ══════════════════════════════════════════
+   FARMER DASHBOARD
+══════════════════════════════════════════ */
+#page-farmer{background:var(--gray-100);}
+.dash-layout{display:flex;min-height:calc(100vh - 60px);}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--navy);padding:1.25rem .9rem;flex-shrink:0;display:flex;flex-direction:column;}
+.sb-user{text-align:center;padding:.9rem;margin-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:1.25rem;}
+.av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--mid-blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto .65rem;border:3px solid rgba(255,255,255,.15);}
+.sb-name{color:white;font-weight:700;font-size:.875rem;}
+.sb-role{color:var(--gray-400);font-size:.72rem;margin-top:2px;}
+.sb-verified{margin-top:.4rem;}
+.sb-nav{list-style:none;flex:1;}
+.sb-nav li{margin-bottom:3px;}
+.sb-nav a{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:10px;color:rgba(255,255,255,.55);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none;}
+.sb-nav a:hover,.sb-nav a.on{background:rgba(59,130,246,.2);color:white;}
+.sb-nav a .ni{font-size:1rem;width:18px;text-align:center;}
+.sb-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,.08);}
+
+/* DASHBOARD CONTENT */
+.dash-content{flex:1;padding:1.75rem;overflow-x:hidden;}
+.d-head{margin-bottom:1.75rem;}
+.d-head h1{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--navy);}
+.d-head p{color:var(--gray-400);font-size:.82rem;margin-top:2px;}
+
+/* STATS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.75rem;}
+.kpi{background:white;border-radius:var(--radius);padding:1.15rem;border:1px solid var(--gray-200);display:flex;align-items:center;gap:.9rem;}
+.kpi-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.kpi-icon.blue{background:var(--light-blue);}
+.kpi-icon.green{background:var(--green-light);}
+.kpi-icon.amber{background:var(--accent-light);}
+.kpi-icon.teal{background:#ccfbf1;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--navy);}
+.kpi-desc{font-size:.7rem;color:var(--gray-400);}
+
+/* SEC CARD */
+.sc{background:white;border-radius:var(--radius-lg);border:1px solid var(--gray-200);margin-bottom:1.5rem;overflow:hidden;}
+.sc-head{padding:1.1rem 1.4rem;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;}
+.sc-head h2{font-size:.95rem;font-weight:800;color:var(--navy);}
+.sc-body{padding:1.4rem;}
+
+/* ORDERS TABLE */
+.otable{width:100%;border-collapse:collapse;}
+.otable th{text-align:left;font-size:.68rem;font-weight:700;color:var(--gray-400);padding:.7rem 1rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--gray-100);}
+.otable td{padding:.9rem 1rem;font-size:.82rem;border-bottom:1px solid var(--gray-100);color:var(--gray-800);}
+.otable tr:last-child td{border-bottom:none;}
+.otable tr:hover td{background:var(--off-white);}
+
+/* PRODUCT FORM */
+.prod-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+
+/* ══════════════════════════════════════════
+   BUYER DASHBOARD
+══════════════════════════════════════════ */
+#page-buyer{background:var(--gray-100);}
+.buyer-hero{background:linear-gradient(140deg,var(--navy),#1a4080);padding:2.25rem 2rem;color:white;position:relative;overflow:hidden;}
+.buyer-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(59,130,246,.15) 0%,transparent 70%);}
+.buyer-hero-in{max-width:1100px;margin:0 auto;position:relative;}
+.buyer-hero h1{font-family:'Playfair Display',serif;font-size:1.7rem;margin-bottom:.4rem;}
+.buyer-hero p{color:rgba(255,255,255,.65);font-size:.82rem;margin-bottom:1.5rem;}
+.bsearch{display:flex;gap:.75rem;max-width:560px;}
+.bsearch input{flex:1;padding:11px 16px;border-radius:var(--radius);border:none;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;}
+
+.buyer-grid{max-width:1100px;margin:2rem auto;padding:0 2rem;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+
+.order-item{background:white;border-radius:var(--radius);padding:1.1rem;margin-bottom:.85rem;border:1px solid var(--gray-200);display:flex;align-items:center;gap:.9rem;transition:all .2s;}
+.order-item:hover{box-shadow:var(--shadow-md);}
+.oi-emoji{font-size:1.9rem;flex-shrink:0;}
+.oi-info{flex:1;}
+.oi-name{font-weight:700;font-size:.9rem;color:var(--navy);}
+.oi-detail{font-size:.73rem;color:var(--gray-400);margin-top:2px;}
+.oi-price{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--mid-blue);}
+
+.farmer-card{background:white;border-radius:var(--radius);padding:1.1rem;margin-bottom:.85rem;border:1px solid var(--gray-200);display:flex;align-items:center;gap:.9rem;cursor:pointer;transition:all .2s;}
+.farmer-card:hover{border-color:var(--mid-blue);box-shadow:var(--shadow-md);}
+.f-av{width:46px;height:46px;border-radius:50%;background:var(--light-blue);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.f-info{flex:1;}
+.f-name{font-weight:700;font-size:.9rem;color:var(--navy);}
+.f-loc{font-size:.72rem;color:var(--gray-400);}
+.f-prods{font-size:.72rem;color:var(--mid-blue);margin-top:2px;}
+
+/* ══════════════════════════════════════════
+   FARMER PROFILE PAGE
+══════════════════════════════════════════ */
+#page-profile{background:var(--gray-100);}
+.profile-hero{
+  background:linear-gradient(140deg,var(--navy),#1a4080);
+  padding:3rem 2rem;color:white;
+  display:flex;align-items:center;justify-content:center;
+}
+.profile-box{background:white;border-radius:var(--radius-xl);max-width:780px;width:100%;margin:2rem auto;padding:0;overflow:hidden;box-shadow:var(--shadow-lg);}
+.profile-cover{height:160px;background:linear-gradient(135deg,var(--blue),var(--mid-blue),var(--teal));position:relative;}
+.profile-cover-pat{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);background-size:20px 20px;}
+.profile-av-wrap{position:absolute;bottom:-36px;left:2rem;}
+.profile-av{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#f97316);border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:2.2rem;box-shadow:var(--shadow-md);}
+.profile-body{padding:3.5rem 2rem 2rem;}
+.profile-name-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem;}
+.profile-name{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--navy);font-weight:900;}
+.profile-badges{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.3rem;}
+.profile-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1.5rem;}
+.pm-item{background:var(--off-white);border-radius:var(--radius);padding:.9rem;border:1px solid var(--gray-200);}
+.pm-label{font-size:.68rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;}
+.pm-value{font-weight:700;font-size:.95rem;color:var(--navy);margin-top:3px;}
+.profile-crops{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.crop-tag{background:var(--green-light);color:var(--green);padding:5px 12px;border-radius:50px;font-size:.75rem;font-weight:700;}
+.profile-reviews{margin-top:1.5rem;}
+.review-item{background:var(--off-white);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;border:1px solid var(--gray-200);}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
+.review-name{font-weight:700;font-size:.82rem;color:var(--navy);}
+.stars{color:var(--accent);font-size:.82rem;}
+.review-text{font-size:.8rem;color:var(--gray-600);line-height:1.6;}
+
+/* ══════════════════════════════════════════
+   CHAT PAGE
+══════════════════════════════════════════ */
+#page-chat{background:var(--gray-100);}
+.chat-layout{display:flex;height:calc(100vh - 60px);}
+.chat-list{width:280px;background:white;border-right:1px solid var(--gray-200);display:flex;flex-direction:column;overflow:hidden;}
+.chat-list-head{padding:1rem;border-bottom:1px solid var(--gray-200);}
+.chat-list-head h3{font-weight:800;font-size:.95rem;color:var(--navy);}
+.chat-contacts{flex:1;overflow-y:auto;}
+.chat-contact{display:flex;align-items:center;gap:.75rem;padding:.9rem 1rem;cursor:pointer;transition:all .2s;border-bottom:1px solid var(--gray-100);}
+.chat-contact:hover,.chat-contact.active{background:var(--light-blue);}
+.cc-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--mid-blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.cc-info{flex:1;min-width:0;}
+.cc-name{font-weight:700;font-size:.85rem;color:var(--navy);}
+.cc-last{font-size:.72rem;color:var(--gray-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-meta{text-align:right;flex-shrink:0;}
+.cc-time{font-size:.65rem;color:var(--gray-400);}
+.cc-unread{width:18px;height:18px;background:var(--mid-blue);border-radius:50%;font-size:.65rem;font-weight:700;color:white;display:flex;align-items:center;justify-content:center;margin:2px 0 0 auto;}
+
+.chat-main{flex:1;display:flex;flex-direction:column;background:var(--off-white);}
+.chat-top{background:white;border-bottom:1px solid var(--gray-200);padding:.9rem 1.25rem;display:flex;align-items:center;gap:.75rem;}
+.ct-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--mid-blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.ct-name{font-weight:700;font-size:.9rem;color:var(--navy);}
+.ct-status{font-size:.7rem;color:var(--green-mid);display:flex;align-items:center;gap:3px;}
+.ct-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green-mid);display:inline-block;}
+.chat-actions{margin-left:auto;display:flex;gap:.4rem;}
+
+.chat-msgs{flex:1;padding:1.25rem;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;}
+.msg-bubble{max-width:70%;padding:.8rem 1.1rem;border-radius:18px;font-size:.85rem;line-height:1.6;position:relative;}
+.msg-bubble.recv{background:white;border-radius:18px 18px 18px 4px;align-self:flex-start;box-shadow:var(--shadow-sm);color:var(--gray-800);}
+.msg-bubble.sent{background:var(--mid-blue);color:white;border-radius:18px 18px 4px 18px;align-self:flex-end;}
+.msg-time{font-size:.62rem;opacity:.6;margin-top:4px;}
+.msg-sender{font-size:.7rem;font-weight:700;color:var(--mid-blue);margin-bottom:3px;}
+
+.chat-input-area{background:white;border-top:1px solid var(--gray-200);padding:.9rem 1.25rem;display:flex;align-items:center;gap:.75rem;}
+.chat-input{flex:1;padding:10px 15px;border:2px solid var(--gray-200);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;transition:border-color .2s;}
+.chat-input:focus{border-color:var(--mid-blue);}
+.chat-send{width:42px;height:42px;border-radius:50%;background:var(--mid-blue);border:none;color:white;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.chat-send:hover{background:#1e40af;transform:scale(1.05);}
+.chat-mic{width:42px;height:42px;border-radius:50%;background:var(--green-light);border:none;color:var(--green);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.chat-mic:hover{background:var(--green);color:white;}
+
+/* BARGAIN WIDGET */
+.bargain-box{background:linear-gradient(135deg,var(--accent-light),#fff);border:2px solid var(--accent);border-radius:var(--radius);padding:1rem;margin:.5rem 0;max-width:70%;align-self:flex-end;}
+.bargain-box .b-label{font-size:.7rem;font-weight:700;color:#92400e;margin-bottom:.4rem;}
+.bargain-box .b-price{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--navy);font-weight:700;}
+.bargain-box .b-actions{display:flex;gap:.4rem;margin-top:.6rem;}
+
+/* ══════════════════════════════════════════
+   VOICE PANEL
+══════════════════════════════════════════ */
+.voice-panel{
+  position:fixed;bottom:6rem;right:2rem;z-index:300;
+  background:white;border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-xl);
+  width:300px;
+  padding:1.5rem;
+  display:none;
+  animation:slideUp .25s ease;
+}
+.voice-panel.open{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+.vp-title{font-weight:800;font-size:1rem;color:var(--navy);margin-bottom:.25rem;}
+.vp-sub{font-size:.75rem;color:var(--gray-400);margin-bottom:1rem;}
+.vp-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:48px;margin:1rem 0;}
+.vp-bar{width:4px;border-radius:4px;background:var(--mid-blue);animation:wavebar 1s ease infinite;}
+.vp-bar:nth-child(2){animation-delay:.1s;height:20px;}
+.vp-bar:nth-child(3){animation-delay:.2s;height:36px;}
+.vp-bar:nth-child(4){animation-delay:.3s;height:28px;}
+.vp-bar:nth-child(5){animation-delay:.4s;height:40px;}
+.vp-bar:nth-child(6){animation-delay:.5s;height:24px;}
+.vp-bar:nth-child(7){animation-delay:.6s;height:32px;}
+@keyframes wavebar{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+.vp-text{background:var(--off-white);border-radius:var(--radius);padding:.75rem;font-size:.82rem;color:var(--gray-600);min-height:52px;margin-bottom:1rem;line-height:1.6;}
+.vp-cmds{display:flex;flex-direction:column;gap:.4rem;}
+.vp-cmd{background:var(--gray-100);border-radius:8px;padding:.5rem .75rem;font-size:.73rem;color:var(--gray-600);cursor:pointer;transition:all .2s;}
+.vp-cmd:hover{background:var(--light-blue);color:var(--mid-blue);}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-ov.open{display:flex;}
+.modal{background:white;border-radius:var(--radius-xl);box-shadow:var(--shadow-xl);width:100%;max-width:470px;max-height:90vh;overflow-y:auto;animation:fadeIn .25s ease;}
+.modal-head{padding:1.4rem;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-weight:800;font-size:1.05rem;color:var(--navy);}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--gray-400);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:var(--gray-100);}
+.modal-body{padding:1.4rem;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:white;padding:.9rem 1.4rem;border-radius:var(--radius);box-shadow:var(--shadow-lg);font-size:.82rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;display:flex;align-items:center;gap:.6rem;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* WEATHER WIDGET */
+.weather-widget{background:linear-gradient(135deg,#0f2d5e,#1a4080);border-radius:var(--radius-lg);padding:1.25rem;color:white;margin-bottom:1rem;}
+.ww-loc{font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:.25rem;}
+.ww-main{display:flex;align-items:center;gap:.75rem;}
+.ww-icon{font-size:2.5rem;margin-right:.75rem;}
+.ww-temp{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;}
+.ww-desc{font-size:.78rem;color:rgba(255,255,255,.65);}
+.ww-details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem;}
+.ww-detail{background:rgba(255,255,255,.08);border-radius:8px;padding:.5rem;text-align:center;}
+.ww-detail .wd-icon{font-size:.9rem;}
+.ww-detail .wd-val{font-size:.78rem;font-weight:700;margin-top:2px;}
+.ww-detail .wd-lbl{font-size:.62rem;color:rgba(255,255,255,.45);}
+.ww-forecast{display:flex;gap:.5rem;margin-top:1rem;overflow-x:auto;}
+.ww-forecast::-webkit-scrollbar{height:0;}
+.wf-day{background:rgba(255,255,255,.07);border-radius:8px;padding:.5rem .75rem;text-align:center;flex-shrink:0;}
+.wf-day .d-name{font-size:.65rem;color:rgba(255,255,255,.5);}
+.wf-day .d-icon{font-size:1.2rem;margin:.2rem 0;}
+.wf-day .d-temp{font-size:.75rem;font-weight:700;}
+
+/* LOCATION MAP PLACEHOLDER */
+.map-placeholder{background:linear-gradient(135deg,#e0f2fe,#dbeafe);border-radius:var(--radius-lg);height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #93c5fd;color:#1d4ed8;gap:.5rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.map-placeholder:hover{background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+.map-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(29,78,216,.15) 1px,transparent 1px);background-size:20px 20px;}
+.map-icon{font-size:2.5rem;position:relative;}
+.map-text{font-size:.85rem;font-weight:700;position:relative;}
+.map-sub{font-size:.72rem;color:rgba(29,78,216,.7);position:relative;}
+
+/* Farmer pins on map */
+.map-pins{position:absolute;inset:0;}
+.map-pin{position:absolute;width:32px;height:32px;background:var(--mid-blue);border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(29,78,216,.4);cursor:pointer;transition:all .2s;}
+.map-pin:hover{transform:rotate(-45deg) scale(1.2);}
+.map-pin span{transform:rotate(45deg);font-size:.85rem;}
+.map-pin-label{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:white;color:var(--navy);font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:50px;white-space:nowrap;box-shadow:var(--shadow-sm);display:none;}
+.map-pin:hover .map-pin-label{display:block;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .roles-grid,.form-row,.buyer-grid{grid-template-columns:1fr;}
+  .sidebar,.chat-list{display:none;}
+  .stats-inner{grid-template-columns:repeat(2,1fr);}
+  .navbar{padding:0 1rem;}
+  .nb:not(.cta){display:none;}
+  .prod-form-grid{grid-template-columns:1fr;}
+  .profile-meta{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAVBAR ════ -->
+<nav class="navbar">
+  <div class="nav-logo" onclick="goTo('home')">🌾 <em>কৃষক</em>বাজার</div>
+  <div class="nav-links">
+    <button class="nb" onclick="goTo('products')">🛒 পণ্য</button>
+    <button class="nb" onclick="goTo('chat')">💬 চ্যাট</button>
+    <button class="nb" onclick="goTo('profile')">👨‍🌾 কৃষক প্রোফাইল</button>
+    <button class="nb" id="nav-dashboard-btn" onclick="goTo('auth')">📊 ড্যাশবোর্ড</button>
+    <button class="nb cta" onclick="goTo('auth')">লগইন</button>
+  </div>
+</nav>
+
+<!-- ════ VOICE FAB ════ -->
+<button class="voice-fab" id="voice-fab" onclick="toggleVoice()" title="ভয়েস কমান্ড">🎤</button>
+
+<!-- ════ VOICE PANEL ════ -->
+<div class="voice-panel" id="voice-panel">
+  <div class="vp-title">🎤 ভয়েস সহায়তা</div>
+  <div class="vp-sub">বলুন — আমি শুনছি!</div>
+  <div class="vp-wave" id="vp-wave" style="display:none;">
+    <div class="vp-bar" style="height:16px;"></div>
+    <div class="vp-bar"></div>
+    <div class="vp-bar"></div>
+    <div class="vp-bar"></div>
+    <div class="vp-bar"></div>
+    <div class="vp-bar"></div>
+    <div class="vp-bar"></div>
+  </div>
+  <div class="vp-text" id="vp-text">নিচের কোনো কমান্ড বলুন অথবা মাইক্রোফোন বোতাম চাপুন।</div>
+  <div class="vp-cmds">
+    <div class="vp-cmd" onclick="voiceCmd('পণ্য দেখাও')">🌾 "পণ্য দেখাও"</div>
+    <div class="vp-cmd" onclick="voiceCmd('টমেটো খুঁজছি')">🍅 "টমেটো খুঁজছি"</div>
+    <div class="vp-cmd" onclick="voiceCmd('বাজার দর দেখাও')">💰 "বাজার দর দেখাও"</div>
+    <div class="vp-cmd" onclick="voiceCmd('আমার অর্ডার দেখাও')">📦 "আমার অর্ডার দেখাও"</div>
+    <div class="vp-cmd" onclick="voiceCmd('কাছের কৃষক দেখাও')">📍 "কাছের কৃষক দেখাও"</div>
+  </div>
+  <button class="btn btn-ghost btn-sm btn-full" style="margin-top:1rem;" onclick="toggleVoice()">বন্ধ করুন</button>
+</div>
+
+<!-- ══════════════════════════════
+     HOME PAGE
+══════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-dots"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">🇧🇩 মধ্যস্বত্বভোগী ছাড়া কৃষি বাজার</div>
+      <h1>কৃষক থেকে সরাসরি<br><span class="hl">আপনার দরজায়</span></h1>
+      <p class="hero-sub">ন্যায্য মূল্যে তাজা কৃষিপণ্য — কোনো দালাল নেই, কোনো লুকানো চার্জ নেই।<br>কৃষক ও ক্রেতার মধ্যে সরাসরি ডিজিটাল সংযোগ।</p>
+      <div class="hero-actions">
+        <button class="btn btn-accent btn-lg" onclick="goTo('auth')">🌱 শুরু করুন — বিনামূল্যে</button>
+        <button class="btn btn-lg" style="background:rgba(255,255,255,.12);color:white;border:2px solid rgba(255,255,255,.25);" onclick="goTo('products')">🛒 পণ্য দেখুন</button>
+      </div>
+    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,32 C480,72 960,0 1440,32 L1440,56 L0,56 Z" fill="#f6f9ff"/></svg>
+  </section>
+
+  <!-- LIVE MARKET TICKER -->
+  <div class="market-ticker">
+    <div class="ticker-label">📊 LIVE</div>
+    <div class="ticker-track" id="ticker-track"></div>
+  </div>
+
+  <!-- WEATHER STRIP -->
+  <div class="weather-strip">
+    <span class="weather-loc">📍 ঢাকা বিভাগ</span>
+    <div class="weather-item"><span class="wi">☁️</span> আজ: মেঘলা</div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span class="wi">🌡️</span> ৩২°C</div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span class="wi">💧</span> আর্দ্রতা: ৭৮%</div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span class="wi">🌧️</span> কাল: হালকা বৃষ্টির সম্ভাবনা</div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span class="wi">🌬️</span> বায়ু: ১৪ km/h</div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span class="wi">☀️</span> পরশু: রোদ্রোজ্জ্বল</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div><div class="stat-num">১,২৪০+</div><div class="stat-lbl">নিবন্ধিত কৃষক</div></div>
+      <div><div class="stat-num">৩৮০+</div><div class="stat-lbl">সক্রিয় ক্রেতা</div></div>
+      <div><div class="stat-num">৬৪টি</div><div class="stat-lbl">জেলায় কার্যক্রম</div></div>
+      <div><div class="stat-num">৯৮%</div><div class="stat-lbl">সন্তুষ্ট ব্যবহারকারী</div></div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" style="background:white;">
+    <div class="section-inner">
+      <h2 class="sec-title">কীভাবে কাজ করে?</h2>
+      <p class="sec-sub">মাত্র ৩টি ধাপে সরাসরি কৃষক-ক্রেতা সংযোগ</p>
+      <div class="how-grid">
+        <div class="how-card"><div class="how-step">১</div><div class="how-icon blue">📝</div><h3>অ্যাকাউন্ট খুলুন</h3><p>বিনামূল্যে নিবন্ধন করুন। ভয়েস সাপোর্টে সহজেই রেজিস্ট্রেশন।</p></div>
+        <div class="how-card"><div class="how-step">২</div><div class="how-icon amber">🌾</div><h3>পণ্য লিস্ট করুন</h3><p>কৃষক তাদের পণ্য, দাম ও তাজা ফসলের তথ্য আপলোড করুন।</p></div>
+        <div class="how-card"><div class="how-step">৩</div><div class="how-icon teal">📍</div><h3>কাছের কৃষক খুঁজুন</h3><p>লোকেশন দেখে কাছের কৃষকের কাছ থেকে তাজা পণ্য কিনুন।</p></div>
+        <div class="how-card"><div class="how-step">৪</div><div class="how-icon green">🤝</div><h3>সরাসরি দরদাম করুন</h3><p>চ্যাটে সরাসরি কৃষকের সাথে কথা বলুন, দরদাম করুন।</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PRODUCTS PREVIEW -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="sec-title">আজকের তাজা পণ্য</h2>
+      <p class="sec-sub">সরাসরি মাঠ থেকে — সর্বোচ্চ তাজা</p>
+      <div class="prod-grid" id="home-prod-grid"></div>
+      <div style="text-align:center;margin-top:2rem;"><button class="btn btn-primary btn-lg" onclick="goTo('products')">সব পণ্য দেখুন →</button></div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="section" style="background:white;">
+    <div class="section-inner">
+      <h2 class="sec-title">আপনি কে?</h2>
+      <p class="sec-sub">আপনার ভূমিকা অনুযায়ী শুরু করুন</p>
+      <div class="roles-grid">
+        <div class="role-card" onclick="goTo('auth')">
+          <div class="role-emoji">👨‍🌾</div>
+          <h3>আমি কৃষক</h3>
+          <p>আমার উৎপাদিত ফসল সরাসরি ক্রেতার কাছে বিক্রি করতে চাই। নিজেই দাম নির্ধারণ করব।</p>
+          <button class="btn btn-primary btn-full">কৃষক হিসেবে যোগ দিন →</button>
+        </div>
+        <div class="role-card" onclick="goTo('auth')">
+          <div class="role-emoji">🏪</div>
+          <h3>আমি ক্রেতা</h3>
+          <p>হোটেল, রেস্টুরেন্ট বা ব্যক্তিগত প্রয়োজনে কম দামে তাজা পণ্য কিনতে চাই।</p>
+          <button class="btn btn-outline btn-full">ক্রেতা হিসেবে যোগ দিন →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER CTA -->
+  <div class="footer-cta">
+    <h2>আজই যোগ দিন</h2>
+    <p>হাজার হাজার কৃষক ও ক্রেতা ইতিমধ্যে উপকৃত হচ্ছেন</p>
+    <button class="btn btn-accent btn-lg" onclick="goTo('auth')">বিনামূল্যে নিবন্ধন করুন 🌾</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     AUTH PAGE
+══════════════════════════════ -->
+<div class="page" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-head">
+        <div class="auth-logo-t">🌾 <em style="color:var(--accent);font-style:normal;">কৃষক</em>বাজার</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-top:3px;">Farmer-to-Buyer Platform</div>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">লগইন</button>
+        <button class="auth-tab" onclick="switchTab('register')">নিবন্ধন</button>
+      </div>
+      <div class="auth-body">
+        <!-- LOGIN -->
+        <div class="auth-form active" id="form-login">
+          <div class="form-group">
+            <label class="form-label">📱 মোবাইল / ইমেইল</label>
+            <input class="form-input" type="text" placeholder="+880 1X-XXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔒 পাসওয়ার্ড</label>
+            <input class="form-input" type="password" placeholder="পাসওয়ার্ড লিখুন">
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--gray-600);cursor:pointer;">
+              <input type="checkbox"> মনে রাখুন
+            </label>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="handleLogin()">লগইন করুন</button>
+          <div style="margin:1rem 0;display:flex;align-items:center;gap:1rem;"><div style="flex:1;height:1px;background:var(--gray-200);"></div><span style="font-size:.72rem;color:var(--gray-400);">অথবা</span><div style="flex:1;height:1px;background:var(--gray-200);"></div></div>
+          <button class="btn btn-ghost btn-full" onclick="toggleVoice();goTo('home');">🎤 ভয়েস দিয়ে লগইন করুন</button>
+        </div>
+        <!-- REGISTER -->
+        <div class="auth-form" id="form-register">
+          <p style="font-size:.75rem;font-weight:700;color:var(--gray-600);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.04em;">ভূমিকা বেছে নিন</p>
+          <div class="role-pick">
+            <div class="role-opt sel" id="r-farmer" onclick="selRole('farmer')"><div class="ri">👨‍🌾</div><div class="rn">কৃষক</div></div>
+            <div class="role-opt" id="r-buyer" onclick="selRole('buyer')"><div class="ri">🏪</div><div class="rn">ক্রেতা</div></div>
+          </div>
+          <div class="form-group"><label class="form-label">👤 পুরো নাম</label><input class="form-input" type="text" placeholder="আপনার নাম"></div>
+          <div class="form-group"><label class="form-label">📱 মোবাইল</label><input class="form-input" type="tel" placeholder="+880 1X-XXXXXXXX"></div>
+          <div class="form-group"><label class="form-label">📍 জেলা</label>
+            <select class="form-select">
+              <option value="">জেলা বেছে নিন</option>
+              <option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option><option>খুলনা</option>
+              <option>বরিশাল</option><option>সিলেট</option><option>রংপুর</option><option>ময়মনসিংহ</option>
+              <option>কুমিল্লা</option><option>নরসিংদী</option><option>গাজীপুর</option><option>বগুড়া</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">🔒 পাসওয়ার্ড</label><input class="form-input" type="password" placeholder="কমপক্ষে ৮ অক্ষর"></div>
+          <button class="btn btn-primary btn-full" onclick="handleRegister()">অ্যাকাউন্ট তৈরি করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PRODUCTS PAGE
+══════════════════════════════ -->
+<div class="page" id="page-products">
+  <div class="pg-head">
+    <div class="pg-head-in">
+      <div class="pg-title">🛒 পণ্য তালিকা <small>সরাসরি কৃষকের কাছ থেকে — তাজা ও সাশ্রয়ী</small></div>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('market-modal')">📊 বাজার দর</button>
+        <button class="btn btn-primary btn-sm" onclick="openOrderModal(1)">+ অর্ডার করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET PRICE PANEL -->
+  <div class="prod-main" style="padding-bottom:0;">
+    <div class="market-panel">
+      <h3>💰 আজকের বাজার দর — কাওরান বাজার <span class="badge badge-green" style="font-size:.65rem;">LIVE</span></h3>
+      <div class="market-grid" id="market-grid"></div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-in">
+      <div class="search-wrap">
+        <span class="search-icon-abs">🔍</span>
+        <input class="form-input" type="text" placeholder="পণ্য বা কৃষক বা জেলা খুঁজুন..." id="search-input" oninput="filterProds()">
+      </div>
+      <div class="chips">
+        <div class="chip on" onclick="filterChip(this,'all')">সব</div>
+        <div class="chip" onclick="filterChip(this,'শাকসবজি')">🥦 শাকসবজি</div>
+        <div class="chip" onclick="filterChip(this,'ফল')">🍎 ফল</div>
+        <div class="chip" onclick="filterChip(this,'শস্য')">🌾 শস্য</div>
+        <div class="chip" onclick="filterChip(this,'মসলা')">🌶️ মসলা</div>
+        <div class="chip" onclick="filterChip(this,'জৈব')">🌿 অর্গানিক</div>
+      </div>
+    </div>
+  </div>
+  <div class="prod-main">
+    <div class="prod-grid" id="products-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     FARMER DASHBOARD
+══════════════════════════════ -->
+<div class="page" id="page-farmer">
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sb-user">
+        <div class="av">👨‍🌾</div>
+        <div class="sb-name">মোঃ আব্দুল করিম</div>
+        <div class="sb-role">কৃষক · নরসিংদী</div>
+        <div class="sb-verified"><span class="badge badge-verified">✅ যাচাইকৃত</span></div>
+      </div>
+      <ul class="sb-nav">
+        <li><a class="on"><span class="ni">📊</span> ড্যাশবোর্ড</a></li>
+        <li><a onclick="document.getElementById('farmer-my-products-section')?.scrollIntoView({behavior:'smooth'})"><span class="ni">🌾</span> আমার পণ্য</a></li>
+        <li><a onclick="document.getElementById('farmer-orders-section')?.scrollIntoView({behavior:'smooth'})"><span class="ni">📦</span> অর্ডারসমূহ</a></li>
+        <li><a onclick="goTo('chat')"><span class="ni">💬</span> বার্তা <span class="badge badge-red" style="margin-left:auto;">৩</span></a></li>
+        <li><a onclick="goTo('profile')"><span class="ni">👤</span> প্রোফাইল</a></li>
+        <li><a><span class="ni">💰</span> আয়ের তথ্য</a></li>
+      </ul>
+      <div class="sb-bottom">
+        <ul class="sb-nav">
+          <li><a onclick="toggleVoice()"><span class="ni">🎤</span> ভয়েস সহায়তা</a></li>
+          <li><a onclick="goTo('home')"><span class="ni">🚪</span> লগআউট</a></li>
+        </ul>
+      </div>
+    </aside>
+    <div class="dash-content">
+      <div class="d-head">
+        <h1>স্বাগতম, করিম ভাই! 👋</h1>
+        <p>রবিবার, ১৩ এপ্রিল ২০২৫ · নরসিংদী</p>
+      </div>
+
+      <!-- WEATHER WIDGET -->
+      <div class="weather-widget">
+        <div class="ww-loc">📍 নরসিংদী সদর — কৃষি আবহাওয়া পূর্বাভাস</div>
+        <div class="ww-main">
+          <span class="ww-icon">⛅</span>
+          <div>
+            <div class="ww-temp">৩১°C</div>
+            <div class="ww-desc">আংশিক মেঘলা · চাষের জন্য উপযুক্ত</div>
+          </div>
+        </div>
+        <div class="ww-details">
+          <div class="ww-detail"><div class="wd-icon">💧</div><div class="wd-val">৭৬%</div><div class="wd-lbl">আর্দ্রতা</div></div>
+          <div class="ww-detail"><div class="wd-icon">🌬️</div><div class="wd-val">১২km/h</div><div class="wd-lbl">বায়ু</div></div>
+          <div class="ww-detail"><div class="wd-icon">🌧️</div><div class="wd-val">৩০%</div><div class="wd-lbl">বৃষ্টির সম্ভাবনা</div></div>
+        </div>
+        <div class="ww-forecast">
+          <div class="wf-day"><div class="d-name">আজ</div><div class="d-icon">⛅</div><div class="d-temp">৩১°</div></div>
+          <div class="wf-day"><div class="d-name">কাল</div><div class="d-icon">🌦️</div><div class="d-temp">২৮°</div></div>
+          <div class="wf-day"><div class="d-name">বুধ</div><div class="d-icon">☀️</div><div class="d-temp">৩৩°</div></div>
+          <div class="wf-day"><div class="d-name">বৃহ</div><div class="d-icon">🌤️</div><div class="d-temp">৩২°</div></div>
+          <div class="wf-day"><div class="d-name">শুক্র</div><div class="d-icon">🌧️</div><div class="d-temp">২৬°</div></div>
+          <div class="wf-day"><div class="d-name">শনি</div><div class="d-icon">⛈️</div><div class="d-temp">২৫°</div></div>
+          <div class="wf-day"><div class="d-name">রবি</div><div class="d-icon">☀️</div><div class="d-temp">৩০°</div></div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-icon blue">🌾</div><div><div class="kpi-val">৮</div><div class="kpi-desc">সক্রিয় পণ্য</div></div></div>
+        <div class="kpi"><div class="kpi-icon amber">📦</div><div><div class="kpi-val">১২</div><div class="kpi-desc">মোট অর্ডার</div></div></div>
+        <div class="kpi"><div class="kpi-icon green">💰</div><div><div class="kpi-val">৳৩২,৫০০</div><div class="kpi-desc">এই মাসে আয়</div></div></div>
+        <div class="kpi"><div class="kpi-icon teal">⭐</div><div><div class="kpi-val">৪.৮</div><div class="kpi-desc">গড় রেটিং</div></div></div>
+      </div>
+
+      <!-- ADD PRODUCT -->
+      <div class="sc">
+        <div class="sc-head">
+          <h2>➕ নতুন পণ্য যোগ করুন</h2>
+          <button class="btn btn-primary btn-sm" onclick="handleAddProduct()">প্রকাশ করুন</button>
+        </div>
+        <div class="sc-body">
+          <div class="prod-form-grid">
+            <div class="form-group"><label class="form-label">পণ্যের নাম</label><input class="form-input" type="text" placeholder="যেমন: টমেটো, আলু"></div>
+            <div class="form-group"><label class="form-label">ক্যাটাগরি</label><select class="form-select"><option>শাকসবজি</option><option>ফল</option><option>শস্য</option><option>মসলা</option></select></div>
+            <div class="form-group"><label class="form-label">পরিমাণ (কেজি)</label><input class="form-input" type="number" placeholder="৫০০"></div>
+            <div class="form-group"><label class="form-label">মূল্য (৳/কেজি)</label><input class="form-input" type="number" placeholder="আপনার নির্ধারিত দাম"></div>
+            <div class="form-group"><label class="form-label">ফসল কাটার তারিখ</label><input class="form-input" type="date"></div>
+            <div class="form-group"><label class="form-label">উৎপাদনের স্থান</label><input class="form-input" type="text" placeholder="গ্রাম / উপজেলা"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">পণ্যের বিবরণ</label>
+            <textarea class="form-textarea" placeholder="পণ্য সম্পর্কে বিস্তারিত লিখুন..."></textarea>
+          </div>
+          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--gray-600);cursor:pointer;background:var(--green-light);padding:.5rem 1rem;border-radius:50px;"><input type="checkbox" style="accent-color:var(--green);"> 🌿 অর্গানিক পণ্য</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--gray-600);cursor:pointer;background:var(--light-blue);padding:.5rem 1rem;border-radius:50px;"><input type="checkbox" style="accent-color:var(--mid-blue);"> ✅ সার্টিফাইড</label>
+          </div>
+          <div class="form-group" style="margin-top:1rem;">
+            <label class="form-label">📷 পণ্যের ছবি</label>
+            <input type="file" id="product-image-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            <div id="product-upload-dropzone" style="border:2px dashed var(--gray-200);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;color:var(--gray-400);transition:all .2s;" onmouseover="this.style.borderColor='var(--mid-blue)'" onmouseout="this.style.borderColor='var(--gray-200)'">
+              <div style="font-size:2rem;margin-bottom:.4rem;">📸</div>
+              <div id="product-upload-label" style="font-size:.8rem;">ছবি টেনে আনুন বা ক্লিক করুন</div>
+              <div style="font-size:.7rem;margin-top:3px;color:var(--gray-300);">JPG, PNG · সর্বোচ্চ 5MB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCATION MAP -->
+      <div class="sc">
+        <div class="sc-head"><h2>📍 আমার অবস্থান ও কাছের ক্রেতা</h2><span class="badge badge-green">৫ জন কাছে আছেন</span></div>
+        <div class="sc-body">
+          <div class="map-placeholder" onclick="showToast('🗺️ Google Maps সংযুক্ত করতে API Key প্রয়োজন')">
+            <div class="map-dots"></div>
+            <div class="map-pins">
+              <div class="map-pin" style="bottom:40%;left:48%;"><span>📍</span><div class="map-pin-label">আপনি এখানে</div></div>
+              <div class="map-pin" style="bottom:55%;left:35%;background:#16a34a;"><span>🏪</span><div class="map-pin-label">রহিম রেস্টুরেন্ট</div></div>
+              <div class="map-pin" style="bottom:30%;left:62%;background:#16a34a;"><span>🏪</span><div class="map-pin-label">করিম ট্রেডার্স</div></div>
+              <div class="map-pin" style="bottom:60%;left:65%;background:#f59e0b;"><span>👨‍🌾</span><div class="map-pin-label">রফিকুল (কৃষক)</div></div>
+            </div>
+            <div class="map-icon">🗺️</div>
+            <div class="map-text">আপনার এলাকার মানচিত্র</div>
+            <div class="map-sub">নরসিংদী সদর · Google Maps সংযুক্ত করুন</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY PRODUCTS -->
+      <div class="sc" id="farmer-my-products-section">
+        <div class="sc-head">
+          <h2>🌾 আমার পণ্য</h2>
+          <span class="badge badge-blue" id="farmer-products-count">০টি</span>
+        </div>
+        <div style="padding:0;">
+          <table class="otable">
+            <thead><tr><th>পণ্য</th><th>পরিমাণ</th><th>দাম</th><th>অবস্থা</th><th>প্রকাশের তারিখ</th></tr></thead>
+            <tbody id="farmer-products-tbody">
+              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gray-400);">পণ্য তালিকা লোড হচ্ছে...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="sc" id="farmer-orders-section">
+        <div class="sc-head"><h2>📦 অর্ডারসমূহ</h2><span class="badge badge-blue" id="farmer-orders-count">০টি</span></div>
+        <div style="padding:0;">
+          <table class="otable">
+            <thead><tr><th>পণ্য</th><th>ক্রেতা</th><th>পরিমাণ</th><th>মূল্য</th><th>অবস্থা</th><th>অ্যাকশন</th></tr></thead>
+            <tbody>
+              <tr><td>🍅 টমেটো</td><td>রহিম রেস্টুরেন্ট</td><td>৫০ কেজি</td><td>৳২,৫০০</td><td><span class="badge badge-amber">অপেক্ষমান</span></td><td><button class="btn btn-green btn-sm" onclick="showToast('✅ অর্ডার গ্রহণ করা হয়েছে!')">গ্রহণ</button></td></tr>
+              <tr><td>🥔 আলু</td><td>করিম ট্রেডার্স</td><td>১০০ কেজি</td><td>৳৩,০০০</td><td><span class="badge badge-green">নিশ্চিত</span></td><td><button class="btn btn-outline btn-sm" onclick="goTo('chat')">বার্তা</button></td></tr>
+              <tr><td>🌶️ মরিচ</td><td>সুমাইয়া বেগম</td><td>২০ কেজি</td><td>৳১,৬০০</td><td><span class="badge badge-blue">ডেলিভারি</span></td><td><button class="btn btn-ghost btn-sm">বিস্তারিত</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     BUYER DASHBOARD
+══════════════════════════════ -->
+<div class="page" id="page-buyer">
+  <div class="buyer-hero">
+    <div class="buyer-hero-in">
+      <h1>স্বাগতম, রহিম ভাই! 🏪</h1>
+      <p>সরাসরি কৃষকের কাছ থেকে তাজা পণ্য কিনুন — কোনো মধ্যস্বত্বভোগী নেই</p>
+      <div class="bsearch">
+        <input type="text" placeholder="পণ্য, কৃষক বা এলাকা খুঁজুন...">
+        <button class="btn btn-accent" onclick="goTo('products')">🔍 খুঁজুন</button>
+      </div>
+    </div>
+  </div>
+  <div class="buyer-grid">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--navy);">📦 আমার অর্ডার</h2>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <span class="badge badge-blue" id="buyer-orders-count">০টি</span>
+          <button class="btn btn-primary btn-sm" onclick="goTo('products')">+ নতুন অর্ডার</button>
+        </div>
+      </div>
+      <div class="orders-list">
+        <div style="text-align:center;padding:1.5rem;color:var(--gray-400);">অর্ডার তালিকা লোড হচ্ছে...</div>
+      </div>
+
+      <!-- BUYER WEATHER -->
+      <div class="weather-widget" style="margin-top:1rem;">
+        <div class="ww-loc">📍 ঢাকা — ক্রেতার অবস্থান</div>
+        <div class="ww-main"><span class="ww-icon">☁️</span><div><div class="ww-temp">৩২°C</div><div class="ww-desc">মেঘলা · পণ্য পরিবহনে সতর্কতা</div></div></div>
+        <div class="ww-details">
+          <div class="ww-detail"><div class="wd-icon">💧</div><div class="wd-val">৮০%</div><div class="wd-lbl">আর্দ্রতা</div></div>
+          <div class="ww-detail"><div class="wd-icon">🌬️</div><div class="wd-val">১৬km/h</div><div class="wd-lbl">বায়ু</div></div>
+          <div class="ww-detail"><div class="wd-icon">🌧️</div><div class="wd-val">৫৫%</div><div class="wd-lbl">বৃষ্টির সম্ভাবনা</div></div>
+        </div>
+      </div>
+
+      <!-- SAVINGS -->
+      <div style="background:white;border-radius:var(--radius-lg);padding:1.25rem;border:1px solid var(--gray-200);margin-top:1rem;">
+        <h3 style="font-size:.9rem;font-weight:800;color:var(--navy);margin-bottom:.9rem;">📊 এই মাসের সারসংক্ষেপ</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+          <div style="text-align:center;padding:.9rem;background:var(--light-blue);border-radius:var(--radius);"><div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--mid-blue);" id="buyer-monthly-spend">৳০</div><div style="font-size:.7rem;color:var(--gray-400);">মোট খরচ</div></div>
+          <div style="text-align:center;padding:.9rem;background:var(--green-light);border-radius:var(--radius);"><div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--green);" id="buyer-monthly-saving-rate">০%</div><div style="font-size:.7rem;color:var(--gray-400);" id="buyer-monthly-saving-note">সাশ্রয় হয়েছে</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEARBY FARMERS + MAP -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--navy);">📍 কাছের কৃষকরা</h2>
+        <span class="badge badge-blue" id="buyer-farmers-count">০ জন</span>
+      </div>
+
+      <!-- MAP -->
+      <div class="map-placeholder" style="height:170px;margin-bottom:1rem;" onclick="showToast('🗺️ আপনার কাছের ৮ জন কৃষক পাওয়া গেছে!')">
+        <div class="map-dots"></div>
+        <div class="map-pins">
+          <div class="map-pin" style="bottom:45%;left:50%;background:#dc2626;"><span>📍</span><div class="map-pin-label">আপনি এখানে</div></div>
+          <div class="map-pin" style="bottom:60%;left:30%;"><span>👨‍🌾</span><div class="map-pin-label">করিম (১২ কিমি)</div></div>
+          <div class="map-pin" style="bottom:35%;left:70%;"><span>👩‍🌾</span><div class="map-pin-label">সালেহা (২৫ কিমি)</div></div>
+          <div class="map-pin" style="bottom:65%;left:65%;"><span>👨‍🌾</span><div class="map-pin-label">রফিকুল (৩০ কিমি)</div></div>
+        </div>
+        <div class="map-icon">🗺️</div>
+        <div class="map-text">লোকেশন ম্যাপ</div>
+        <div class="map-sub">Google Maps সংযুক্ত করুন</div>
+      </div>
+
+      <div id="buyer-farmers-list">
+        <div style="text-align:center;padding:1.2rem;color:var(--gray-400);">কৃষকের তালিকা লোড হচ্ছে...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     FARMER PROFILE PAGE
+══════════════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="prod-main" style="max-width:820px;">
+    <div style="margin-bottom:1rem;"><button class="btn btn-ghost btn-sm" onclick="goTo('products')">← ফিরে যান</button></div>
+    <div class="profile-box">
+      <div class="profile-cover">
+        <div class="profile-cover-pat"></div>
+        <div class="profile-av-wrap"><div class="profile-av" id="profile-avatar">🧑‍🌾</div></div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-name-row">
+          <div>
+            <div class="profile-name" id="profile-name">মোঃ আব্দুল করিম</div>
+            <div class="profile-badges" id="profile-badges">
+              <span class="badge badge-verified">✅ যাচাইকৃত কৃষক</span>
+              <span class="badge badge-green">🌿 অর্গানিক</span>
+              <span class="badge badge-amber">⭐ টপ সেলার</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;">
+            <button class="btn btn-primary btn-sm" onclick="startProfileChat()">💬 বার্তা পাঠান</button>
+            <button class="btn btn-accent btn-sm" onclick="goTo('products')">🛒 অর্ডার করুন</button>
+          </div>
+        </div>
+
+        <div class="profile-meta">
+          <div class="pm-item"><div class="pm-label">📍 অবস্থান</div><div class="pm-value" id="profile-district">নরসিংদী সদর</div></div>
+          <div class="pm-item"><div class="pm-label">⏳ অভিজ্ঞতা</div><div class="pm-value" id="profile-experience">১৫ বছর</div></div>
+          <div class="pm-item"><div class="pm-label">🌾 জমির পরিমাণ</div><div class="pm-value" id="profile-land">৮ বিঘা</div></div>
+          <div class="pm-item"><div class="pm-label">📦 মোট অর্ডার</div><div class="pm-value" id="profile-total-orders">২৪৫টি</div></div>
+          <div class="pm-item"><div class="pm-label">⭐ রেটিং</div><div class="pm-value" id="profile-rating">৪.৮ / ৫.০</div></div>
+          <div class="pm-item"><div class="pm-label">📱 মোবাইল</div><div class="pm-value" id="profile-phone">+880 1X-XXXXXX</div></div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">উৎপাদিত ফসল</div>
+          <div class="profile-crops">
+            <span class="crop-tag">🍅 টমেটো</span>
+            <span class="crop-tag">🥔 আলু</span>
+            <span class="crop-tag">🌶️ মরিচ</span>
+            <span class="crop-tag">🍆 বেগুন</span>
+            <span class="crop-tag">🥦 ফুলকপি</span>
+            <span class="crop-tag">🧅 পেঁয়াজ</span>
+          </div>
+        </div>
+
+        <div style="background:var(--off-white);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;border:1px solid var(--gray-200);">
+          <div style="font-size:.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;">পরিচিতি</div>
+          <p style="font-size:.85rem;color:var(--gray-600);line-height:1.7;" id="profile-bio">নরসিংদীর একজন অভিজ্ঞ কৃষক। ১৫ বছরের বেশি সময় ধরে জৈব পদ্ধতিতে শাকসবজি চাষ করে আসছেন। তার পণ্য সম্পূর্ণ কীটনাশকমুক্ত এবং তাজা।</p>
+        </div>
+
+        <!-- LOCATION ON PROFILE -->
+        <div style="margin-bottom:1.5rem;">
+          <div style="font-size:.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">📍 অবস্থান</div>
+          <div class="map-placeholder" style="height:140px;" onclick="showToast('📍 নরসিংদী সদর, নরসিংদী জেলা')">
+            <div class="map-dots"></div>
+            <div class="map-pins"><div class="map-pin" style="bottom:40%;left:48%;"><span>📍</span><div class="map-pin-label">করিমের খামার</div></div></div>
+            <div class="map-icon">🗺️</div>
+            <div class="map-text">নরসিংদী সদর</div>
+          </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="profile-reviews">
+          <div style="font-size:.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem;">ক্রেতাদের মন্তব্য</div>
+          <div class="review-item"><div class="review-header"><span class="review-name">🏪 রহিম রেস্টুরেন্ট</span><span class="stars">★★★★★</span></div><div class="review-text">অসাধারণ মানের টমেটো! একদম তাজা এবং দামও যুক্তিসংগত। আর কোনো মধ্যস্বত্বভোগীর দরকার নেই।</div></div>
+          <div class="review-item"><div class="review-header"><span class="review-name">🏪 করিম ট্রেডার্স</span><span class="stars">★★★★☆</span></div><div class="review-text">পণ্যের মান খুব ভালো। সময়মতো ডেলিভারি দিয়েছেন। পরেরবারও নেব।</div></div>
+          <div class="review-item"><div class="review-header"><span class="review-name">👩 সুমাইয়া বেগম</span><span class="stars">★★★★★</span></div><div class="review-text">জৈব মরিচ পেয়ে অনেক খুশি। পরিবারের জন্য নিরাপদ খাবার কিনতে পারছি।</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CHAT PAGE
+══════════════════════════════ -->
+<div class="page" id="page-chat">
+  <div class="chat-layout">
+    <!-- CONTACTS -->
+    <div class="chat-list">
+      <div class="chat-list-head"><h3>💬 বার্তা</h3></div>
+      <div class="chat-contacts">
+        <div class="chat-contact active" onclick="selectChat('করিম ভাই')">
+          <div class="cc-av">🧑‍🌾</div>
+          <div class="cc-info"><div class="cc-name">করিম ভাই (কৃষক)</div><div class="cc-last">৫০ কেজি টমেটো কি পাঠাতে পারবেন?</div></div>
+          <div class="cc-meta"><div class="cc-time">১০:৩২</div><div class="cc-unread">৩</div></div>
+        </div>
+        <div class="chat-contact" onclick="selectChat('সালেহা বেগম')">
+          <div class="cc-av">👩‍🌾</div>
+          <div class="cc-info"><div class="cc-name">সালেহা বেগম (কৃষক)</div><div class="cc-last">হ্যাঁ, পালং শাক আছে।</div></div>
+          <div class="cc-meta"><div class="cc-time">গতকাল</div></div>
+        </div>
+        <div class="chat-contact" onclick="selectChat('রফিকুল ইসলাম')">
+          <div class="cc-av">🧑‍🌾</div>
+          <div class="cc-info"><div class="cc-name">রফিকুল ইসলাম (কৃষক)</div><div class="cc-last">আলুর দাম কমানো যাবে না।</div></div>
+          <div class="cc-meta"><div class="cc-time">সোম</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT MAIN -->
+    <div class="chat-main">
+      <div class="chat-top">
+        <div class="ct-av">🧑‍🌾</div>
+        <div>
+          <div class="ct-name" id="chat-partner-name">করিম ভাই (কৃষক)</div>
+          <div class="ct-status">এখন অনলাইন</div>
+        </div>
+        <div class="chat-actions">
+          <button class="btn btn-ghost btn-sm" onclick="goTo('profile')">👤 প্রোফাইল</button>
+          <button class="btn btn-accent btn-sm" onclick="openBargainBox()">💰 দরদাম করুন</button>
+        </div>
+      </div>
+
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg-bubble recv">
+          <div class="msg-sender">করিম ভাই 🧑‍🌾</div>
+          আস্সালামু আলাইকুম! কী লাগবে আজকে?
+          <div class="msg-time">১০:১৫</div>
+        </div>
+        <div class="msg-bubble sent">
+          ওয়ালাইকুম আস্সালাম। ৫০ কেজি টমেটো লাগবে। কত করে দেবেন?
+          <div class="msg-time">১০:১৭</div>
+        </div>
+        <div class="msg-bubble recv">
+          <div class="msg-sender">করিম ভাই 🧑‍🌾</div>
+          টমেটো এখন ৫০ টাকা/কেজি। একদম তাজা, আজকেই তোলা।
+          <div class="msg-time">১০:২০</div>
+        </div>
+        <div class="msg-bubble sent">
+          ৪৫ টাকা হলে নিতে পারি। ৫০ কেজি একসাথে নেব।
+          <div class="msg-time">১০:২৫</div>
+        </div>
+        <!-- BARGAIN WIDGET -->
+        <div class="bargain-box" id="bargain-widget" style="display:none;">
+          <div class="b-label">💰 দরদামের অফার</div>
+          <div class="b-price" id="bargain-price">৳৪৫/কেজি</div>
+          <div style="font-size:.72rem;color:var(--gray-600);margin-top:2px;">৫০ কেজি = ৳২,২৫০</div>
+          <div class="b-actions">
+            <button class="btn btn-green btn-sm" onclick="acceptBargain()">✅ গ্রহণ করুন</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectBargain()">❌ না</button>
+            <button class="btn btn-ghost btn-sm" onclick="counterBargain()">↩️ পাল্টা প্রস্তাব</button>
+          </div>
+        </div>
+        <div class="msg-bubble recv" id="bargain-reply" style="display:none;">
+          <div class="msg-sender">করিম ভাই 🧑‍🌾</div>
+          ঠিক আছে, ৪৭ টাকায় দেব। এর কম হবে না।
+          <div class="msg-time">১০:৩০</div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <button class="chat-mic" onclick="toggleVoice()" title="ভয়েস বার্তা">🎤</button>
+        <input class="chat-input" type="text" placeholder="বার্তা লিখুন... (বাংলায়)" id="chat-input" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="chat-send" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ORDER MODAL ══ -->
+<div class="modal-ov" id="order-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🛒 অর্ডার করুন</div>
+      <button class="modal-close" onclick="closeModal('order-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--off-white);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;">
+        <div id="m-emoji" style="flex-shrink:0;"></div>
+        <div>
+          <div style="font-weight:800;font-size:1.05rem;color:var(--navy);" id="m-name">পণ্যের নাম</div>
+          <div style="font-size:.75rem;color:var(--gray-400);" id="m-farmer">কৃষক · অবস্থান</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--mid-blue);font-weight:700;margin-top:2px;" id="m-price">৳০/কেজি</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">পরিমাণ (কেজি)</label><input class="form-input" type="number" placeholder="কত কেজি?" id="o-qty" oninput="calcTotal()"></div>
+        <div class="form-group"><label class="form-label">আনুমানিক মোট</label><input class="form-input" type="text" id="o-total" readonly placeholder="৳০" style="background:var(--off-white);font-weight:700;color:var(--mid-blue);"></div>
+      </div>
+      <div class="form-group"><label class="form-label">ডেলিভারির ঠিকানা</label><textarea class="form-textarea" placeholder="সম্পূর্ণ ঠিকানা লিখুন..." style="min-height:70px;"></textarea></div>
+      <div class="form-group"><label class="form-label">💬 কৃষককে বার্তা (ঐচ্ছিক)</label><input class="form-input" type="text" placeholder="যেমন: সকালে পাঠাবেন"></div>
+      <button class="btn btn-primary btn-full" onclick="placeOrder()">✅ অর্ডার নিশ্চিত করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MARKET PRICE MODAL ══ -->
+<div class="modal-ov" id="market-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <div class="modal-title">📊 কাওরান বাজার — আজকের দর</div>
+      <button class="modal-close" onclick="closeModal('market-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--green-light);border-radius:var(--radius);padding:.75rem;margin-bottom:1rem;font-size:.8rem;color:var(--green);font-weight:600;">
+        🕐 সর্বশেষ আপডেট: আজ সকাল ৭:০০ · উৎস: কৃষি বিপণন অধিদপ্তর
+      </div>
+      <div id="market-full-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">সফল!</span>
+</div>
+
+<script>
+/* ───── DATA ───── */
+const products=[
+  {id:1, name:'টমেটো',        emoji:'🍅', cat:'শাকসবজি', farmer:'মোঃ আব্দুল করিম',  loc:'নরসিংদী',        qty:'৫০০ কেজি',  price:50,  date:'১০ এপ্রিল ২০২৫', bg:'#fef2f2', organic:true,  verified:true,
+   img:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:2, name:'আলু',          emoji:'🥔', cat:'শাকসবজি', farmer:'রফিকুল ইসলাম',    loc:'মুন্সিগঞ্জ',     qty:'১০০০ কেজি', price:30,  date:'৮ এপ্রিল ২০২৫',  bg:'#fffbeb', organic:false, verified:true,
+   img:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:3, name:'পালং শাক',    emoji:'🥬', cat:'শাকসবজি', farmer:'সালেহা বেগম',      loc:'মানিকগঞ্জ',      qty:'২০০ কেজি',  price:40,  date:'১১ এপ্রিল ২০২৫', bg:'#f0fdf4', organic:true,  verified:true,
+   img:'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:4, name:'কলা (সাগর)',  emoji:'🍌', cat:'ফল',       farmer:'জমির উদ্দিন',      loc:'বগুড়া',          qty:'৩০০ কাঁদি', price:60,  date:'৯ এপ্রিল ২০২৫',  bg:'#fefce8', organic:false, verified:false,
+   img:'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:5, name:'ধান (বোরো)',  emoji:'🌾', cat:'শস্য',     farmer:'হাবিবুর রহমান',    loc:'দিনাজপুর',       qty:'৫০০০ কেজি', price:28,  date:'৫ এপ্রিল ২০২৫',  bg:'#f0fdf4', organic:false, verified:true,
+   img:'https://images.unsplash.com/photo-1536054215-5423c9f90f97?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:6, name:'মরিচ (কাঁচা)',emoji:'🌶️',cat:'মসলা',     farmer:'নুরুল ইসলাম',      loc:'ময়মনসিংহ',      qty:'১৫০ কেজি',  price:80,  date:'১২ এপ্রিল ২০২৫', bg:'#fff1f2', organic:true,  verified:true,
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:7, name:'বেগুন',        emoji:'🍆', cat:'শাকসবজি', farmer:'রোকেয়া বেগম',     loc:'গাজীপুর',         qty:'২৫০ কেজি',  price:35,  date:'১০ এপ্রিল ২০২৫', bg:'#f5f3ff', organic:false, verified:false,
+   img:'https://images.unsplash.com/photo-1638882471009-a8e62cfd5a55?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:8, name:'আম (হিমসাগর)',emoji:'🥭', cat:'ফল',       farmer:'আলাউদ্দিন',        loc:'চাঁপাইনবাবগঞ্জ', qty:'৮০০ কেজি',  price:120, date:'১৫ এপ্রিল ২০২৫', bg:'#fff7ed', organic:true,  verified:true,
+   img:'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:9, name:'ফুলকপি',       emoji:'🥦', cat:'শাকসবজি', farmer:'করিম উদ্দিন',     loc:'রাজশাহী',         qty:'৪০০ কেজি',  price:45,  date:'১১ এপ্রিল ২০২৫', bg:'#f0fdf4', organic:false, verified:true,
+   img:'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:10,name:'পেঁয়াজ',      emoji:'🧅', cat:'মসলা',     farmer:'রহিমা বেগম',       loc:'পাবনা',           qty:'৬০০ কেজি',  price:55,  date:'৭ এপ্রিল ২০২৫',  bg:'#fff7ed', organic:false, verified:false,
+   img:'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:11,name:'আদা',          emoji:'🫚', cat:'মসলা',     farmer:'ইব্রাহিম খান',     loc:'খুলনা',           qty:'১০০ কেজি',  price:90,  date:'৯ এপ্রিল ২০২৫',  bg:'#fffbeb', organic:true,  verified:true,
+   img:'https://images.unsplash.com/photo-1573414401379-d37ade1c9d5b?w=480&h=300&fit=crop&auto=format&q=80'},
+  {id:12,name:'পেয়ারা',      emoji:'🍈', cat:'ফল',       farmer:'মোতাহার মিয়া',    loc:'বরিশাল',          qty:'৩৫০ কেজি',  price:50,  date:'১২ এপ্রিল ২০২৫', bg:'#f0fdf4', organic:false, verified:true,
+   img:'https://images.unsplash.com/photo-1536511132770-e5058c7e8c46?w=480&h=300&fit=crop&auto=format&q=80'},
+];
+
+const marketPrices=[
+  {name:'টমেটো',emoji:'🍅',price:48,change:+3,unit:'কেজি'},
+  {name:'আলু',emoji:'🥔',price:32,change:-2,unit:'কেজি'},
+  {name:'পেঁয়াজ',emoji:'🧅',price:58,change:+5,unit:'কেজি'},
+  {name:'মরিচ',emoji:'🌶️',price:85,change:-4,unit:'কেজি'},
+  {name:'বেগুন',emoji:'🍆',price:38,change:0,unit:'কেজি'},
+  {name:'আদা',emoji:'🫚',price:95,change:+8,unit:'কেজি'},
+  {name:'রসুন',emoji:'🧄',price:120,change:-6,unit:'কেজি'},
+  {name:'কলা',emoji:'🍌',price:55,change:+2,unit:'কেজি'},
+  {name:'ফুলকপি',emoji:'🥦',price:42,change:+1,unit:'কেজি'},
+  {name:'পালং',emoji:'🥬',price:35,change:-3,unit:'কেজি'},
+  {name:'ধান',emoji:'🌾',price:28,change:0,unit:'কেজি'},
+  {name:'পেয়ারা',emoji:'🍈',price:48,change:+4,unit:'কেজি'},
+];
+
+let currentFilter='all';
+let activeProduct=null;
+let isListening=false;
+
+/* ───── NAVIGATION ───── */
+function goTo(p){
+  document.querySelectorAll('.page').forEach(x=>{x.classList.remove('active');x.style.display='none';});
+  const t=document.getElementById('page-'+p);
+  if(t){t.style.display='block';requestAnimationFrame(()=>t.classList.add('active'));}
+  window.scrollTo(0,0);
+}
+
+/* ───── AUTH ───── */
+function switchTab(t){
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+  document.getElementById('form-login').classList.toggle('active',t==='login');
+  document.getElementById('form-register').classList.toggle('active',t==='register');
+}
+function selRole(r){
+  document.getElementById('r-farmer').classList.toggle('sel',r==='farmer');
+  document.getElementById('r-buyer').classList.toggle('sel',r==='buyer');
+}
+function handleLogin(){showToast('✅ সফলভাবে লগইন হয়েছে!');setTimeout(()=>goTo('farmer'),900);}
+function handleRegister(){
+  const f=document.getElementById('r-farmer').classList.contains('sel');
+  showToast('🎉 অ্যাকাউন্ট তৈরি সফল!');
+  setTimeout(()=>goTo(f?'farmer':'buyer'),900);
+}
+
+/* ───── PRODUCT CARD RENDER ───── */
+function prodCard(p){
+  const orgTag=p.organic?`<span class="badge badge-green">🌿 অর্গানিক</span>`:'';
+  const verTag=p.verified?`<span class="badge badge-verified">✅ ভেরিফাইড</span>`:'';
+  return`<div class="prod-card">
+    <div style="height:185px;position:relative;overflow:hidden;background:${p.bg};">
+      <!-- skeleton shimmer while loading -->
+      <div class="img-skeleton" id="sk-${p.id}" style="position:absolute;inset:0;background:linear-gradient(90deg,${p.bg} 25%,rgba(255,255,255,.6) 50%,${p.bg} 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;z-index:1;"></div>
+      <!-- real image -->
+      <img
+        src="${p.img}"
+        alt="${p.name}"
+        loading="lazy"
+        style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;position:relative;z-index:2;"
+        onload="document.getElementById('sk-${p.id}').style.display='none';"
+        onerror="document.getElementById('sk-${p.id}').style.display='none';this.style.display='none';document.getElementById('fb-${p.id}').style.display='flex';"
+        onmouseover="this.style.transform='scale(1.07)'"
+        onmouseout="this.style.transform='scale(1)'"
+      >
+      <!-- emoji fallback -->
+      <div id="fb-${p.id}" style="display:none;position:absolute;inset:0;z-index:2;align-items:center;justify-content:center;font-size:4.5rem;background:${p.bg};">
+        ${p.emoji}
+      </div>
+      <!-- badges overlay -->
+      <div style="position:absolute;top:.6rem;left:.6rem;z-index:3;display:flex;gap:.3rem;flex-wrap:wrap;">${orgTag}${verTag}</div>
+      <!-- price pill -->
+      <div style="position:absolute;bottom:.65rem;right:.65rem;z-index:3;background:rgba(7,20,38,.78);backdrop-filter:blur(6px);color:white;padding:4px 11px;border-radius:50px;font-size:.78rem;font-weight:700;letter-spacing:.01em;">
+        ৳${p.price}<span style="font-size:.6rem;opacity:.65;">/কেজি</span>
+      </div>
+    </div>
+    <div class="prod-body">
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-farmer" style="cursor:pointer;" onclick="${p.farmerId ? `openFarmerProfile(${p.farmerId})` : `goTo('profile')`}">👨‍🌾 ${p.farmer} · 📍 ${p.loc}</div>
+      <div class="prod-meta">
+        <div class="prod-price">৳${p.price} <small>/কেজি</small></div>
+        <span class="badge badge-blue">${p.cat}</span>
+      </div>
+      <div class="prod-info-row">
+        <span class="badge badge-amber">📦 ${p.qty}</span>
+        <span class="badge badge-teal">📅 ${p.date}</span>
+      </div>
+      <div class="prod-foot">
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openOrderModal(${p.id})">🛒 অর্ডার</button>
+        <button class="btn btn-outline btn-sm" onclick="${p.farmerId ? `startChatWithFarmer(${p.farmerId})` : `goTo('chat')`}">💬</button>
+        <button class="btn btn-ghost btn-sm" onclick="${p.farmerId ? `openFarmerProfile(${p.farmerId})` : `goTo('profile')`}">👤</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderProds(list,id){
+  const g=document.getElementById(id);
+  if(g) g.innerHTML=list.length?list.map(prodCard).join(''):`<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400);">🌾 কোনো পণ্য পাওয়া যায়নি</div>`;
+}
+
+function filterProds(){
+  const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+  let list=currentFilter==='all'?products:currentFilter==='জৈব'?products.filter(p=>p.organic):products.filter(p=>p.cat===currentFilter);
+  if(q)list=list.filter(p=>p.name.includes(q)||p.farmer.includes(q)||p.loc.includes(q));
+  renderProds(list,'products-grid');
+}
+
+function filterChip(el,cat){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  currentFilter=cat;
+  filterProds();
+}
+
+/* ───── MARKET PRICES ───── */
+function renderMarket(){
+  const g=document.getElementById('market-grid');
+  if(g) g.innerHTML=marketPrices.slice(0,8).map(m=>`
+    <div class="market-item">
+      <div class="m-icon">${m.emoji}</div>
+      <div class="m-name">${m.name}</div>
+      <div class="m-price">৳${m.price}</div>
+      <div class="m-change ${m.change>0?'m-up':m.change<0?'m-down':''}">${m.change>0?'▲ +'+m.change:m.change<0?'▼ '+m.change:'— একই'}/কেজি</div>
+    </div>`).join('');
+  const fg=document.getElementById('market-full-grid');
+  if(fg) fg.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.65rem;">
+    ${marketPrices.map(m=>`<div class="market-item">
+      <div class="m-icon">${m.emoji}</div>
+      <div class="m-name">${m.name}</div>
+      <div class="m-price">৳${m.price}</div>
+      <div class="m-change ${m.change>0?'m-up':m.change<0?'m-down':''}">${m.change>0?'▲ +'+m.change:m.change<0?'▼ '+m.change:'— একই'}/কেজি</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderTicker(){
+  const doubled=[...marketPrices,...marketPrices];
+  const t=document.getElementById('ticker-track');
+  if(t) t.innerHTML=doubled.map(m=>`<div class="ticker-item">
+    ${m.emoji} <span class="t-name">${m.name}</span>
+    <span class="t-price">৳${m.price}</span>
+    <span class="${m.change>0?'t-up':'t-down'}">${m.change>0?'▲+'+m.change:m.change<0?'▼'+m.change:'—'}</span>
+  </div>`).join('');
+}
+
+/* ───── ORDER MODAL ───── */
+function openOrderModal(id){
+  const p=products.find(x=>x.id===id)||products[0];
+  activeProduct=p;
+  // show image in modal
+  const emojiEl=document.getElementById('m-emoji');
+  emojiEl.innerHTML=`
+    <div style="position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden;flex-shrink:0;">
+      <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${p.bg};font-size:2.2rem;">${p.emoji}</div>
+    </div>`;
+  document.getElementById('m-name').textContent=p.name;
+  document.getElementById('m-farmer').textContent=`${p.farmer} · ${p.loc}`;
+  document.getElementById('m-price').textContent=`৳${p.price}/কেজি`;
+  document.getElementById('o-qty').value='';
+  document.getElementById('o-total').value='৳০';
+  openModal('order-modal');
+}
+function calcTotal(){
+  const qty=parseFloat(document.getElementById('o-qty').value)||0;
+  document.getElementById('o-total').value=qty>0?`৳${(qty*(activeProduct?.price||0)).toLocaleString('bn-BD')}`:'৳০';
+}
+function placeOrder(){closeModal('order-modal');showToast('🎉 অর্ডার সফলভাবে দেওয়া হয়েছে!');}
+
+/* ───── MODALS ───── */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-ov'))e.target.classList.remove('open');});
+
+/* ───── CHAT ───── */
+let chatMsgs=[
+  {type:'recv',name:'করিম ভাই 🧑‍🌾',text:'আস্সালামু আলাইকুম! কী লাগবে আজকে?',time:'১০:১৫'},
+  {type:'sent',text:'ওয়ালাইকুম আস্সালাম। ৫০ কেজি টমেটো লাগবে। কত করে দেবেন?',time:'১০:১৭'},
+  {type:'recv',name:'করিম ভাই 🧑‍🌾',text:'টমেটো এখন ৫০ টাকা/কেজি। একদম তাজা, আজকেই তোলা।',time:'১০:২০'},
+  {type:'sent',text:'৪৫ টাকা হলে নিতে পারি। ৫০ কেজি একসাথে নেব।',time:'১০:২৫'},
+];
+function renderChatMsgs(){
+  const c=document.getElementById('chat-msgs');
+  if(!c)return;
+  c.innerHTML=chatMsgs.map(m=>m.type==='recv'?
+    `<div class="msg-bubble recv"><div class="msg-sender">${m.name}</div>${m.text}<div class="msg-time">${m.time}</div></div>`:
+    `<div class="msg-bubble sent">${m.text}<div class="msg-time">${m.time}</div></div>`
+  ).join('');
+  // show bargain widget
+  const bw=document.createElement('div');
+  bw.innerHTML=`<div class="bargain-box" id="bargain-widget"><div class="b-label">💰 দরদামের অফার</div><div class="b-price">৳৪৫/কেজি</div><div style="font-size:.72rem;color:var(--gray-600);margin-top:2px;">৫০ কেজি = ৳২,২৫০</div><div class="b-actions"><button class="btn btn-green btn-sm" onclick="acceptBargain()">✅ গ্রহণ করুন</button><button class="btn btn-danger btn-sm" onclick="rejectBargain()">❌ না</button><button class="btn btn-ghost btn-sm" onclick="counterBargain()">↩️ পাল্টা প্রস্তাব</button></div></div>`;
+  c.appendChild(bw.firstChild);
+  c.scrollTop=c.scrollHeight;
+}
+function sendMsg(){
+  const inp=document.getElementById('chat-input');
+  const txt=inp.value.trim();
+  if(!txt)return;
+  const now=new Date();
+  const time=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  chatMsgs.push({type:'sent',text:txt,time});
+  renderChatMsgs();
+  inp.value='';
+  // Auto-reply
+  setTimeout(()=>{
+    const replies=['হ্যাঁ, সম্ভব হবে!','একটু দেখি।','ঠিক আছে ভাই।','দাম একটু বেশি হয়ে যাচ্ছে।'];
+    chatMsgs.push({type:'recv',name:'করিম ভাই 🧑‍🌾',text:replies[Math.floor(Math.random()*replies.length)],time});
+    renderChatMsgs();
+  },1200);
+}
+function selectChat(name){
+  document.querySelectorAll('.chat-contact').forEach(c=>c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('chat-partner-name').textContent=name+' (কৃষক)';
+  showToast('💬 '+name+'-এর সাথে চ্যাট খুলছে...');
+}
+function openBargainBox(){showToast('💰 দরদামের প্রস্তাব পাঠানো হয়েছে!');}
+function acceptBargain(){showToast('✅ দরদাম গ্রহণ করা হয়েছে — ৳৪৭/কেজি');document.getElementById('bargain-widget')?.remove();}
+function rejectBargain(){showToast('❌ দরদাম প্রত্যাখ্যান করা হয়েছে');document.getElementById('bargain-widget')?.remove();}
+function counterBargain(){
+  const bw=document.getElementById('bargain-widget');
+  if(bw){bw.querySelector('.b-price').textContent='৳৪৮/কেজি';bw.querySelector('div:nth-child(3)').textContent='৫০ কেজি = ৳২,৪০০';showToast('↩️ পাল্টা প্রস্তাব পাঠানো হয়েছে: ৳৪৮/কেজি');}
+}
+
+/* ───── VOICE ───── */
+let recognition=null;
+function toggleVoice(){
+  const panel=document.getElementById('voice-panel');
+  const fab=document.getElementById('voice-fab');
+  const isOpen=panel.classList.contains('open');
+  if(isOpen){panel.classList.remove('open');stopListening();}
+  else{panel.classList.add('open');startListening();}
+}
+function startListening(){
+  isListening=true;
+  const fab=document.getElementById('voice-fab');
+  fab.classList.add('listening');
+  fab.textContent='⏹️';
+  document.getElementById('vp-wave').style.display='flex';
+  document.getElementById('vp-text').textContent='শুনছি... বলুন!';
+  if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    recognition=new SR();
+    recognition.lang='bn-BD';
+    recognition.continuous=false;
+    recognition.onresult=e=>{
+      const t=e.results[0][0].transcript;
+      document.getElementById('vp-text').textContent='আপনি বললেন: "'+t+'"';
+      voiceCmd(t);
+    };
+    recognition.onerror=()=>{document.getElementById('vp-text').textContent='দুঃখিত, বোঝা যায়নি। আবার চেষ্টা করুন।';};
+    recognition.start();
+  } else {
+    document.getElementById('vp-text').textContent='আপনার ব্রাউজারে ভয়েস সাপোর্ট নেই। Chrome ব্যবহার করুন।';
+  }
+}
+function stopListening(){
+  isListening=false;
+  const fab=document.getElementById('voice-fab');
+  fab.classList.remove('listening');
+  fab.textContent='🎤';
+  document.getElementById('vp-wave').style.display='none';
+  if(recognition)recognition.stop();
+}
+function voiceCmd(cmd){
+  const c=cmd.toLowerCase();
+  document.getElementById('vp-text').textContent='"'+cmd+'" — প্রক্রিয়া হচ্ছে...';
+  setTimeout(()=>{
+    if(c.includes('পণ্য')||c.includes('বাজার')){goTo('products');showToast('🌾 পণ্য তালিকায় নিয়ে যাচ্ছি...');}
+    else if(c.includes('কৃষক')||c.includes('কাছের')){goTo('buyer');showToast('📍 কাছের কৃষক দেখাচ্ছি...');}
+    else if(c.includes('বাজার দর')||c.includes('দাম')){openModal('market-modal');showToast('💰 বাজার দর দেখাচ্ছি...');}
+    else if(c.includes('অর্ডার')){goTo('buyer');showToast('📦 অর্ডার পেজে নিয়ে যাচ্ছি...');}
+    else if(c.includes('টমেটো')){filterChip(document.querySelector('.chip'),'শাকসবজি');goTo('products');showToast('🍅 টমেটো খুঁজছি...');}
+    else if(c.includes('চ্যাট')||c.includes('বার্তা')){goTo('chat');showToast('💬 চ্যাটে নিয়ে যাচ্ছি...');}
+    else{showToast('🤔 বোঝা যায়নি। আবার চেষ্টা করুন।');}
+    document.getElementById('vp-text').textContent='কমান্ড সম্পন্ন: "'+cmd+'"';
+  },500);
+}
+
+/* ───── TOAST ───── */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ───── FARMER DASHBOARD ───── */
+function handleAddProduct(){showToast('✅ পণ্য সফলভাবে প্রকাশিত হয়েছে!');}
+
+/* ───── INIT ───── */
+document.addEventListener('DOMContentLoaded',()=>{
+  renderProds(products.slice(0,4),'home-prod-grid');
+  renderProds(products,'products-grid');
+  renderMarket();
+  renderTicker();
+  renderChatMsgs();
+});
+</script>
+
+<!-- ══ BACKEND STATUS BANNER ══ -->
+<div id="backend-banner" style="display:none;position:fixed;top:60px;left:0;right:0;z-index:500;
+  background:linear-gradient(90deg,#f59e0b,#d97706);color:#1a1a1a;
+  padding:.6rem 1.5rem;align-items:center;justify-content:space-between;gap:1rem;
+  font-size:.82rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);">
+  <span>⚠️ Demo Mode — Backend চালু নেই। Real data দেখতে Node.js server চালু করুন: <code style="background:rgba(0,0,0,.15);padding:2px 8px;border-radius:4px;">npm run dev</code></span>
+  <a href="#" onclick="document.getElementById('backend-banner').style.display='none';return false;"
+     style="color:#1a1a1a;text-decoration:none;background:rgba(0,0,0,.15);padding:3px 10px;border-radius:6px;">✕</a>
+</div>
+
+<!-- ══ API CONNECTOR ══ -->
+<script src="http://localhost:8000/socket.io/socket.io.js"></script>
+<script src="api.js"></script>
+</body>
+</html>
