@@ -52,6 +52,67 @@ async function migrate() {
         icon VARCHAR(10)  DEFAULT '🌾'
       );
     `);
+
+    // Some imported databases may already contain `categories` data
+    // but be missing the primary/unique constraints needed by FK/ON CONFLICT.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_class
+          WHERE relkind = 'S' AND relname = 'categories_id_seq'
+        ) THEN
+          CREATE SEQUENCE public.categories_id_seq;
+        END IF;
+      END
+      $$;
+    `);
+
+    await client.query(`
+      ALTER TABLE public.categories
+      ALTER COLUMN id SET DEFAULT nextval('public.categories_id_seq');
+    `);
+
+    await client.query(`
+      SELECT setval(
+        'public.categories_id_seq',
+        GREATEST(COALESCE((SELECT MAX(id) FROM public.categories), 0), 1),
+        true
+      );
+    `);
+
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'categories_pkey'
+            AND conrelid = 'public.categories'::regclass
+        ) THEN
+          ALTER TABLE ONLY public.categories
+          ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
+        END IF;
+      END
+      $$;
+    `);
+
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'categories_name_key'
+            AND conrelid = 'public.categories'::regclass
+        ) THEN
+          ALTER TABLE ONLY public.categories
+          ADD CONSTRAINT categories_name_key UNIQUE (name);
+        END IF;
+      END
+      $$;
+    `);
     console.log('  ✅ categories table');
 
     // ── PRODUCTS ───────────────────────────────────────────────
