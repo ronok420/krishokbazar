@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>কৃষকবাজার | KrishokBazar v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root {
   --navy: #071426;
@@ -543,6 +544,14 @@ body{font-family:'DM Sans','Hind Siliguri',sans-serif;background:var(--off-white
 .map-pin span{transform:rotate(45deg);font-size:.85rem;}
 .map-pin-label{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:white;color:var(--navy);font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:50px;white-space:nowrap;box-shadow:var(--shadow-sm);display:none;}
 .map-pin:hover .map-pin-label{display:block;}
+.nearby-map{height:220px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);background:var(--gray-100);}
+.nearby-map.small{height:170px;}
+.nearby-map.profile{height:140px;}
+.map-actions{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.75rem;flex-wrap:wrap;}
+.map-status{font-size:.75rem;color:var(--gray-400);font-weight:600;}
+.nearby-list-note{font-size:.72rem;color:var(--gray-400);margin:-.4rem 0 .75rem;}
+.leaflet-popup-content{font-family:'DM Sans','Hind Siliguri',sans-serif;}
+.leaflet-popup-content button{margin-top:.45rem;}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -909,20 +918,13 @@ body{font-family:'DM Sans','Hind Siliguri',sans-serif;background:var(--off-white
 
       <!-- LOCATION MAP -->
       <div class="sc">
-        <div class="sc-head"><h2>📍 আমার অবস্থান ও কাছের ক্রেতা</h2><span class="badge badge-green">৫ জন কাছে আছেন</span></div>
+        <div class="sc-head"><h2>📍 আমার অবস্থান ও কাছের ক্রেতা</h2><span class="badge badge-green" id="farmer-nearby-count">০ জন কাছে আছেন</span></div>
         <div class="sc-body">
-          <div class="map-placeholder" onclick="showToast('🗺️ Google Maps সংযুক্ত করতে API Key প্রয়োজন')">
-            <div class="map-dots"></div>
-            <div class="map-pins">
-              <div class="map-pin" style="bottom:40%;left:48%;"><span>📍</span><div class="map-pin-label">আপনি এখানে</div></div>
-              <div class="map-pin" style="bottom:55%;left:35%;background:#16a34a;"><span>🏪</span><div class="map-pin-label">রহিম রেস্টুরেন্ট</div></div>
-              <div class="map-pin" style="bottom:30%;left:62%;background:#16a34a;"><span>🏪</span><div class="map-pin-label">করিম ট্রেডার্স</div></div>
-              <div class="map-pin" style="bottom:60%;left:65%;background:#f59e0b;"><span>👨‍🌾</span><div class="map-pin-label">রফিকুল (কৃষক)</div></div>
-            </div>
-            <div class="map-icon">🗺️</div>
-            <div class="map-text">আপনার এলাকার মানচিত্র</div>
-            <div class="map-sub">নরসিংদী সদর · Google Maps সংযুক্ত করুন</div>
+          <div class="map-actions">
+            <div class="map-status" id="farmer-map-status">লোকেশন সেভ করলে কাছের ক্রেতা দেখা যাবে।</div>
+            <button class="btn btn-primary btn-sm" onclick="saveMyLocation('farmer')">📍 আমার লোকেশন সেভ করুন</button>
           </div>
+          <div id="farmer-nearby-map" class="nearby-map"></div>
         </div>
       </div>
 
@@ -1017,18 +1019,12 @@ body{font-family:'DM Sans','Hind Siliguri',sans-serif;background:var(--off-white
       </div>
 
       <!-- MAP -->
-      <div class="map-placeholder" style="height:170px;margin-bottom:1rem;" onclick="showToast('🗺️ আপনার কাছের ৮ জন কৃষক পাওয়া গেছে!')">
-        <div class="map-dots"></div>
-        <div class="map-pins">
-          <div class="map-pin" style="bottom:45%;left:50%;background:#dc2626;"><span>📍</span><div class="map-pin-label">আপনি এখানে</div></div>
-          <div class="map-pin" style="bottom:60%;left:30%;"><span>👨‍🌾</span><div class="map-pin-label">করিম (১২ কিমি)</div></div>
-          <div class="map-pin" style="bottom:35%;left:70%;"><span>👩‍🌾</span><div class="map-pin-label">সালেহা (২৫ কিমি)</div></div>
-          <div class="map-pin" style="bottom:65%;left:65%;"><span>👨‍🌾</span><div class="map-pin-label">রফিকুল (৩০ কিমি)</div></div>
-        </div>
-        <div class="map-icon">🗺️</div>
-        <div class="map-text">লোকেশন ম্যাপ</div>
-        <div class="map-sub">Google Maps সংযুক্ত করুন</div>
+      <div class="map-actions">
+        <div class="map-status" id="buyer-map-status">লোকেশন সেভ করলে কাছের কৃষক দেখা যাবে।</div>
+        <button class="btn btn-primary btn-sm" onclick="saveMyLocation('buyer')">📍 আমার লোকেশন সেভ করুন</button>
       </div>
+      <div id="buyer-nearby-map" class="nearby-map small" style="margin-bottom:1rem;"></div>
+      <div class="nearby-list-note" id="buyer-nearby-note">আপনার কাছাকাছি কৃষকদের দূরত্বসহ দেখানো হবে।</div>
 
       <div id="buyer-farmers-list">
         <div style="text-align:center;padding:1.2rem;color:var(--gray-400);">কৃষকের তালিকা লোড হচ্ছে...</div>
@@ -1093,12 +1089,7 @@ body{font-family:'DM Sans','Hind Siliguri',sans-serif;background:var(--off-white
         <!-- LOCATION ON PROFILE -->
         <div style="margin-bottom:1.5rem;">
           <div style="font-size:.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">📍 অবস্থান</div>
-          <div class="map-placeholder" style="height:140px;" onclick="showToast('📍 নরসিংদী সদর, নরসিংদী জেলা')">
-            <div class="map-dots"></div>
-            <div class="map-pins"><div class="map-pin" style="bottom:40%;left:48%;"><span>📍</span><div class="map-pin-label">করিমের খামার</div></div></div>
-            <div class="map-icon">🗺️</div>
-            <div class="map-text">নরসিংদী সদর</div>
-          </div>
+          <div id="profile-map" class="nearby-map profile"></div>
         </div>
 
         <!-- REVIEWS -->
@@ -1591,6 +1582,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 
 <!-- ══ API CONNECTOR ══ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://krishokbazar.onrender.com/socket.io/socket.io.js"></script>
 <script src="api.js"></script>
 </body>

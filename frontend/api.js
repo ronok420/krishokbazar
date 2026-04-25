@@ -14,6 +14,8 @@ let chatSocketBound = false;
 let selectedFarmer = null;
 let pendingConversationId = null;
 const productLookup = new Map();
+const nearbyUserLookup = new Map();
+const nearbyMaps = new Map();
 let buyerOrdersRefreshTimer = null;
 
 // ================================================================
@@ -110,6 +112,15 @@ async function apiGetMe() {
   return res?.ok ? await res.json() : null;
 }
 
+async function apiUpdateMe(data) {
+  const res = await http('/auth/me', { method: 'PATCH', json: data });
+  const body = await res?.json();
+  if (res?.ok && body?.user) {
+    Auth.save(Auth.token(), { ...Auth.user(), ...body.user });
+  }
+  return res?.ok ? body.user : null;
+}
+
 async function apiFarmers(filters = {}) {
   const q = new URLSearchParams(filters).toString();
   const res = await http(`/auth/farmers${q ? '?' + q : ''}`);
@@ -119,6 +130,14 @@ async function apiFarmers(filters = {}) {
 async function apiFarmerById(id) {
   const res = await http(`/auth/farmers/${id}`);
   return res?.ok ? await res.json() : null;
+}
+
+async function apiNearbyUsers(filters = {}) {
+  const q = new URLSearchParams(filters).toString();
+  const res = await http(`/auth/nearby${q ? '?' + q : ''}`);
+  const body = await res?.json();
+  if (!res?.ok) return { ok: false, error: body?.error || 'Nearby users load failed', users: [] };
+  return { ok: true, ...body };
 }
 
 // ================================================================
@@ -369,6 +388,14 @@ function formatFarmerName(f) {
   return `${f?.first_name || ''} ${f?.last_name || ''}`.trim() || 'নাম নেই';
 }
 
+function formatUserName(user) {
+  return `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'নাম নেই';
+}
+
+function userRoleLabel(role) {
+  return role === 'farmer' ? 'কৃষক' : 'ক্রেতা';
+}
+
 function renderBuyerFarmers(farmers = []) {
   const listEl = document.getElementById('buyer-farmers-list');
   const countEl = document.getElementById('buyer-farmers-count');
@@ -381,14 +408,14 @@ function renderBuyerFarmers(farmers = []) {
   }
 
   listEl.innerHTML = farmers.map((f) => `
-    <div class="farmer-card" onclick="openFarmerProfile(${f.id})">
+    <div class="farmer-card" onclick="openNearbyProfile(${f.id}, 'farmer')">
       <div class="f-av">${f.is_verified ? '🧑‍🌾' : '👨‍🌾'}</div>
       <div class="f-info">
         <div class="f-name">
           ${formatFarmerName(f)}
           ${f.is_verified ? '<span class="badge badge-verified" style="font-size:.6rem;">✅</span>' : ''}
         </div>
-        <div class="f-loc">📍 ${f.district || 'জেলা নেই'}</div>
+        <div class="f-loc">📍 ${f.district || 'জেলা নেই'}${f.distance_km ? ` · ${f.distance_km} কিমি` : ''}</div>
         <div class="f-prods">⭐ ${Number(f.avg_rating || 0).toFixed(1)} রেটিং · 📦 ${f.total_orders || 0} অর্ডার</div>
       </div>
       <button class="btn btn-primary btn-sm" type="button">দেখুন</button>
@@ -397,12 +424,15 @@ function renderBuyerFarmers(farmers = []) {
 }
 
 function renderFarmerProfile(farmer) {
-  if (!farmer) return;
-  selectedFarmer = farmer;
+  renderUserProfile(farmer);
+}
 
-  const isSelf = Auth.user()?.id === farmer.id;
-  const isBuyer = Auth.user()?.role === 'buyer';
-  const name = formatFarmerName(farmer);
+function renderUserProfile(user) {
+  if (!user) return;
+  selectedFarmer = user;
+
+  const isSelf = Auth.user()?.id === user.id;
+  const name = formatUserName(user);
 
   const nameEl = document.getElementById('profile-name');
   const districtEl = document.getElementById('profile-district');
@@ -415,28 +445,34 @@ function renderFarmerProfile(farmer) {
   const avatarEl = document.getElementById('profile-avatar');
   const badgesEl = document.getElementById('profile-badges');
   const messageBtn = document.querySelector('#page-profile .btn.btn-primary.btn-sm');
+  const orderBtn = document.querySelector('#page-profile .btn.btn-accent.btn-sm');
 
   if (nameEl) nameEl.textContent = name;
-  if (districtEl) districtEl.textContent = farmer.district || 'জেলা নেই';
-  if (expEl) expEl.textContent = `${farmer.experience_yrs || 0} বছর`;
-  if (landEl) landEl.textContent = `${farmer.land_size || 0} বিঘা`;
-  if (totalOrdersEl) totalOrdersEl.textContent = `${farmer.total_orders || 0}টি`;
-  if (ratingEl) ratingEl.textContent = `${Number(farmer.avg_rating || 0).toFixed(1)} / ৫.০`;
-  if (phoneEl) phoneEl.textContent = farmer.phone || 'প্রাইভেট';
-  if (bioEl) bioEl.textContent = farmer.bio || 'এই কৃষক এখনো পরিচিতি যোগ করেননি।';
-  if (avatarEl) avatarEl.textContent = farmer.is_verified ? '🧑‍🌾' : '👨‍🌾';
+  if (districtEl) districtEl.textContent = user.district || 'জেলা নেই';
+  if (expEl) expEl.textContent = user.role === 'farmer' ? `${user.experience_yrs || 0} বছর` : 'প্রযোজ্য নয়';
+  if (landEl) landEl.textContent = user.role === 'farmer' ? `${user.land_size || 0} বিঘা` : 'প্রযোজ্য নয়';
+  if (totalOrdersEl) totalOrdersEl.textContent = `${user.total_orders || 0}টি`;
+  if (ratingEl) ratingEl.textContent = user.role === 'farmer' ? `${Number(user.avg_rating || 0).toFixed(1)} / ৫.০` : 'প্রযোজ্য নয়';
+  if (phoneEl) phoneEl.textContent = user.phone || 'প্রাইভেট';
+  if (bioEl) bioEl.textContent = user.bio || `${userRoleLabel(user.role)} প্রোফাইল। বার্তা পাঠিয়ে সরাসরি যোগাযোগ করুন।`;
+  if (avatarEl) avatarEl.textContent = user.role === 'farmer' ? (user.is_verified ? '🧑‍🌾' : '👨‍🌾') : '🏪';
 
   if (badgesEl) {
     badgesEl.innerHTML = `
-      ${farmer.is_verified ? '<span class="badge badge-verified">✅ যাচাইকৃত কৃষক</span>' : ''}
-      <span class="badge badge-green">⭐ ${Number(farmer.avg_rating || 0).toFixed(1)} রেটিং</span>
-      <span class="badge badge-amber">📦 ${farmer.total_orders || 0} অর্ডার</span>
+      ${user.is_verified ? `<span class="badge badge-verified">✅ যাচাইকৃত ${userRoleLabel(user.role)}</span>` : ''}
+      <span class="badge badge-green">${userRoleLabel(user.role)}</span>
+      ${user.distance_km ? `<span class="badge badge-blue">📍 ${user.distance_km} কিমি দূরে</span>` : ''}
+      ${user.role === 'farmer' ? `<span class="badge badge-amber">📦 ${user.total_orders || 0} অর্ডার</span>` : ''}
     `;
   }
 
   if (messageBtn) {
-    messageBtn.style.display = isBuyer && !isSelf ? '' : 'none';
+    messageBtn.style.display = !isSelf ? '' : 'none';
   }
+  if (orderBtn) {
+    orderBtn.style.display = user.role === 'farmer' ? '' : 'none';
+  }
+  renderProfileMap(user);
 }
 
 async function openFarmerProfile(farmerId) {
@@ -449,19 +485,30 @@ async function openFarmerProfile(farmerId) {
   goTo('profile');
 }
 
-async function startChatWithFarmer(farmerId) {
+async function openNearbyProfile(userId, role = 'farmer') {
+  let user = nearbyUserLookup.get(Number(userId));
+  if (!user && role === 'farmer') user = await apiFarmerById(userId);
+  if (!user) {
+    showToast('❌ ব্যবহারকারীর তথ্য পাওয়া যায়নি।');
+    return;
+  }
+  renderUserProfile(user);
+  goTo('profile');
+}
+
+async function startChatWithUser(userId) {
   const me = Auth.user();
   if (!me) {
     showToast('⚠️ বার্তা পাঠাতে লগইন করুন।');
     goTo('auth');
     return;
   }
-  if (me.id === Number(farmerId)) {
+  if (me.id === Number(userId)) {
     showToast('⚠️ নিজের সাথে chat করা যাবে না।');
     return;
   }
 
-  const conv = await apiStartConversation(farmerId);
+  const conv = await apiStartConversation(userId);
   if (!conv?.conversation_id) {
     showToast('❌ Chat শুরু করা যায়নি।');
     return;
@@ -472,12 +519,16 @@ async function startChatWithFarmer(farmerId) {
   await loadChatPage();
 }
 
+async function startChatWithFarmer(farmerId) {
+  await startChatWithUser(farmerId);
+}
+
 async function startProfileChat() {
   if (!selectedFarmer?.id) {
-    showToast('⚠️ আগে একজন কৃষক নির্বাচন করুন।');
+    showToast('⚠️ আগে একজন ব্যবহারকারী নির্বাচন করুন।');
     return;
   }
-  await startChatWithFarmer(selectedFarmer.id);
+  await startChatWithUser(selectedFarmer.id);
 }
 
 function catEmoji(cat) {
@@ -498,6 +549,138 @@ function fmtTime(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function hasSavedLocation(user = Auth.user()) {
+  return Number.isFinite(Number(user?.latitude)) && Number.isFinite(Number(user?.longitude));
+}
+
+function getOrCreateMap(mapId, center = [23.8103, 90.4125], zoom = 10) {
+  const el = document.getElementById(mapId);
+  if (!el || typeof L === 'undefined') return null;
+
+  let entry = nearbyMaps.get(mapId);
+  if (!entry) {
+    const map = L.map(mapId, { scrollWheelZoom: false }).setView(center, zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    const layer = L.layerGroup().addTo(map);
+    entry = { map, layer };
+    nearbyMaps.set(mapId, entry);
+  }
+
+  entry.layer.clearLayers();
+  setTimeout(() => entry.map.invalidateSize(), 80);
+  return entry;
+}
+
+function popupHtml(user) {
+  const distance = user.distance_km ? `<br><strong>দূরত্ব:</strong> ${user.distance_km} কিমি` : '';
+  return `
+    <strong>${formatUserName(user)}</strong><br>
+    ${userRoleLabel(user.role)} · ${user.district || 'জেলা নেই'}${distance}<br>
+    <button class="btn btn-primary btn-sm" onclick="openNearbyProfile(${user.id}, '${user.role}')">প্রোফাইল দেখুন</button>
+  `;
+}
+
+function renderNearbyMap(mapId, payload, users = []) {
+  const center = payload?.center
+    ? [Number(payload.center.latitude), Number(payload.center.longitude)]
+    : [23.8103, 90.4125];
+  const entry = getOrCreateMap(mapId, center, users.length ? 11 : 8);
+  if (!entry) return;
+
+  const { map, layer } = entry;
+  const bounds = [];
+  L.marker(center).addTo(layer).bindPopup('<strong>আপনি এখানে</strong>');
+  bounds.push(center);
+
+  users.forEach((user) => {
+    const lat = Number(user.display_lat);
+    const lng = Number(user.display_lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    nearbyUserLookup.set(Number(user.id), user);
+    const marker = L.marker([lat, lng]).addTo(layer).bindPopup(popupHtml(user));
+    marker.on('click', () => marker.openPopup());
+    bounds.push([lat, lng]);
+  });
+
+  if (bounds.length > 1) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 12 });
+  else map.setView(center, 11);
+}
+
+function renderProfileMap(user) {
+  const lat = Number(user?.display_lat ?? user?.latitude);
+  const lng = Number(user?.display_lng ?? user?.longitude);
+  const entry = getOrCreateMap('profile-map', Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : [23.8103, 90.4125], 11);
+  if (!entry) return;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    entry.map.setView([23.8103, 90.4125], 7);
+    return;
+  }
+  L.marker([lat, lng]).addTo(entry.layer).bindPopup(`<strong>${formatUserName(user)}</strong><br>${user.district || 'লোকেশন'}`).openPopup();
+  entry.map.setView([lat, lng], 11);
+}
+
+async function loadNearbyForDashboard(context) {
+  const targetRole = context === 'buyer' ? 'farmer' : 'buyer';
+  const mapId = context === 'buyer' ? 'buyer-nearby-map' : 'farmer-nearby-map';
+  const statusEl = document.getElementById(context === 'buyer' ? 'buyer-map-status' : 'farmer-map-status');
+  const countEl = document.getElementById(context === 'buyer' ? 'buyer-farmers-count' : 'farmer-nearby-count');
+  const noteEl = document.getElementById('buyer-nearby-note');
+  const user = Auth.user();
+
+  if (!hasSavedLocation(user)) {
+    if (statusEl) statusEl.textContent = 'নিজের লোকেশন সেভ করলে কাছের ব্যবহারকারী দেখা যাবে।';
+    if (noteEl && context === 'buyer') noteEl.textContent = 'উপরের বাটন থেকে লোকেশন সেভ করুন, তারপর কাছের কৃষক দেখানো হবে।';
+    renderNearbyMap(mapId, null, []);
+    return [];
+  }
+
+  if (statusEl) statusEl.textContent = 'কাছাকাছি ব্যবহারকারী খোঁজা হচ্ছে...';
+  const payload = await apiNearbyUsers({ target_role: targetRole, radius_km: 50, limit: 20 });
+  if (!payload.ok) {
+    if (statusEl) statusEl.textContent = payload.error || 'কাছের ব্যবহারকারী লোড হয়নি।';
+    renderNearbyMap(mapId, { center: { latitude: user.latitude, longitude: user.longitude } }, []);
+    return [];
+  }
+
+  const users = payload.users || [];
+  users.forEach((u) => nearbyUserLookup.set(Number(u.id), u));
+  renderNearbyMap(mapId, payload, users);
+  if (statusEl) statusEl.textContent = `${users.length} জন ${targetRole === 'farmer' ? 'কৃষক' : 'ক্রেতা'} ৫০ কিমির মধ্যে পাওয়া গেছে।`;
+  if (countEl) countEl.textContent = context === 'buyer' ? `${users.length} জন` : `${users.length} জন কাছে আছেন`;
+  if (noteEl && context === 'buyer') noteEl.textContent = users.length ? 'দূরত্ব অনুযায়ী কাছের কৃষক আগে দেখানো হয়েছে।' : 'আপনার কাছাকাছি কোনো কৃষক এখনো লোকেশন সেভ করেননি।';
+  return users;
+}
+
+async function saveMyLocation(context = Auth.user()?.role || 'buyer') {
+  if (!Auth.loggedIn()) {
+    showToast('⚠️ লোকেশন সেভ করতে লগইন করুন।');
+    goTo('auth');
+    return;
+  }
+  if (!navigator.geolocation) {
+    showToast('❌ আপনার browser location support করে না।');
+    return;
+  }
+
+  showToast('📍 লোকেশন নেওয়া হচ্ছে...');
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const updated = await apiUpdateMe({
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+    });
+    if (!updated) {
+      showToast('❌ লোকেশন সেভ করা যায়নি।');
+      return;
+    }
+    showToast('✅ লোকেশন সেভ হয়েছে।');
+    await loadNearbyForDashboard(context);
+  }, () => {
+    showToast('❌ লোকেশন permission দিতে হবে।');
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
 }
 
 // ================================================================
@@ -535,6 +718,7 @@ async function loadFarmerDashboard() {
   const myProds = await apiMyProducts();
   renderFarmerProducts(myProds);
   renderFarmerOrders(orders);
+  await loadNearbyForDashboard('farmer');
 
   // KPI আপডেট
   const kpis = document.querySelectorAll('#page-farmer .kpi-val');
@@ -550,7 +734,9 @@ async function loadBuyerDashboard() {
   const orders = await apiMyOrders();
   renderBuyerOrders(orders);
   renderBuyerMonthlySummary(orders);
-  const farmers = await apiFarmers();
+  const nearbyFarmers = await loadNearbyForDashboard('buyer');
+  const farmers = nearbyFarmers.length ? nearbyFarmers : await apiFarmers();
+  farmers.forEach((f) => nearbyUserLookup.set(Number(f.id), f));
   renderBuyerFarmers(farmers);
   startBuyerOrdersAutoRefresh();
 }
