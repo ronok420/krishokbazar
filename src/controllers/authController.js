@@ -25,6 +25,63 @@ function parseCoordinate(value, min, max) {
   return num;
 }
 
+const DISTRICT_COORDS = {
+  'ঢাকা': [23.8103, 90.4125],
+  dhaka: [23.8103, 90.4125],
+  'চট্টগ্রাম': [22.3569, 91.7832],
+  chittagong: [22.3569, 91.7832],
+  'রাজশাহী': [24.3745, 88.6042],
+  rajshahi: [24.3745, 88.6042],
+  'খুলনা': [22.8456, 89.5403],
+  khulna: [22.8456, 89.5403],
+  'বরিশাল': [22.7010, 90.3535],
+  barishal: [22.7010, 90.3535],
+  barisal: [22.7010, 90.3535],
+  'সিলেট': [24.8949, 91.8687],
+  sylhet: [24.8949, 91.8687],
+  'রংপুর': [25.7439, 89.2752],
+  rangpur: [25.7439, 89.2752],
+  'ময়মনসিংহ': [24.7471, 90.4203],
+  mymensingh: [24.7471, 90.4203],
+  'কুমিল্লা': [23.4607, 91.1809],
+  cumilla: [23.4607, 91.1809],
+  comilla: [23.4607, 91.1809],
+  'নরসিংদী': [23.9322, 90.7154],
+  narsingdi: [23.9322, 90.7154],
+  'গাজীপুর': [24.0023, 90.4264],
+  gazipur: [24.0023, 90.4264],
+  'বগুড়া': [24.8465, 89.3776],
+  bogura: [24.8465, 89.3776],
+  bogra: [24.8465, 89.3776],
+};
+
+function districtCoords(district = '') {
+  const key = `${district}`.trim().toLowerCase();
+  return DISTRICT_COORDS[key] || null;
+}
+
+function coordsForUser(user) {
+  const lat = Number(user?.latitude);
+  const lng = Number(user?.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return { latitude: lat, longitude: lng, source: 'gps' };
+  }
+  const approx = districtCoords(user?.district);
+  if (!approx) return null;
+  return { latitude: approx[0], longitude: approx[1], source: 'district' };
+}
+
+function haversineKm(from, to) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRad(to.latitude - from.latitude);
+  const dLon = toRad(to.longitude - from.longitude);
+  const lat1 = toRad(from.latitude);
+  const lat2 = toRad(to.latitude);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 6371 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 // ── নিবন্ধন ─────────────────────────────────────────
 // POST /api/auth/register
 async function register(req, res) {
@@ -201,58 +258,66 @@ async function getNearbyUsers(req, res) {
 
   try {
     const { rows: meRows } = await pool.query(
-      'SELECT id, latitude, longitude FROM users WHERE id = $1',
+      'SELECT id, district, latitude, longitude FROM users WHERE id = $1',
       [req.user.id]
     );
     const me = meRows[0];
-    if (!me?.latitude || !me?.longitude) {
-      return res.status(400).json({ error: 'আগে নিজের লোকেশন সেভ করুন।' });
+    const myCoords = coordsForUser(me);
+    if (!myCoords) {
+      return res.status(400).json({ error: 'আগে নিজের লোকেশন সেভ করুন অথবা প্রোফাইলে জেলা দিন।' });
     }
 
     const { rows } = await pool.query(
-      `WITH nearby AS (
-         SELECT
-           u.id, u.first_name, u.last_name, u.role, u.district,
-           u.avatar, u.is_verified, u.latitude, u.longitude,
-           fp.experience_yrs, fp.land_size, fp.village, fp.bio,
-           fp.avg_rating, fp.total_orders,
-           (
-             6371 * acos(
-               LEAST(1, GREATEST(-1,
-                 cos(radians($1)) * cos(radians(u.latitude::double precision)) *
-                 cos(radians(u.longitude::double precision) - radians($2)) +
-                 sin(radians($1)) * sin(radians(u.latitude::double precision))
-               ))
-             )
-           ) AS distance_km
-         FROM users u
-         LEFT JOIN farmer_profiles fp ON fp.user_id = u.id
-         WHERE u.id <> $3
-           AND u.role = $4
-           AND u.latitude IS NOT NULL
-           AND u.longitude IS NOT NULL
-       )
-       SELECT
-         id, first_name, last_name, role, district, avatar, is_verified,
-         experience_yrs, land_size, village, bio, avg_rating, total_orders,
-         ROUND(distance_km::numeric, 2) AS distance_km,
-         ROUND(latitude::numeric, 2) AS display_lat,
-         ROUND(longitude::numeric, 2) AS display_lng
-       FROM nearby
-       WHERE distance_km <= $5
-       ORDER BY distance_km ASC
-       LIMIT $6`,
-      [Number(me.latitude), Number(me.longitude), req.user.id, targetRole, radiusKm, limit]
+      `SELECT
+         u.id, u.first_name, u.last_name, u.role, u.district,
+         u.avatar, u.is_verified, u.latitude, u.longitude,
+         fp.experience_yrs, fp.land_size, fp.village, fp.bio,
+         fp.avg_rating, fp.total_orders
+       FROM users u
+       LEFT JOIN farmer_profiles fp ON fp.user_id = u.id
+       WHERE u.id <> $1
+         AND u.role = $2`,
+      [req.user.id, targetRole]
     );
+
+    const users = rows
+      .map((user) => {
+        const targetCoords = coordsForUser(user);
+        if (!targetCoords) return null;
+        const distanceKm = haversineKm(myCoords, targetCoords);
+        return {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          role: user.role,
+          district: user.district,
+          avatar: user.avatar,
+          is_verified: user.is_verified,
+          experience_yrs: user.experience_yrs,
+          land_size: user.land_size,
+          village: user.village,
+          bio: user.bio,
+          avg_rating: user.avg_rating,
+          total_orders: user.total_orders,
+          distance_km: Number(distanceKm.toFixed(2)),
+          display_lat: Number(targetCoords.latitude.toFixed(2)),
+          display_lng: Number(targetCoords.longitude.toFixed(2)),
+          location_source: targetCoords.source,
+        };
+      })
+      .filter(Boolean)
+      .filter((user) => user.distance_km <= radiusKm)
+      .sort((a, b) => a.distance_km - b.distance_km)
+      .slice(0, limit);
 
     res.json({
       center: {
-        latitude: Number(me.latitude),
-        longitude: Number(me.longitude),
+        latitude: myCoords.latitude,
+        longitude: myCoords.longitude,
       },
       radius_km: radiusKm,
       target_role: targetRole,
-      users: rows,
+      users,
     });
   } catch (err) {
     console.error(err);

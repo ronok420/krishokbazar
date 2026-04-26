@@ -8,6 +8,9 @@
 
 // ─── Backend URL ── Railway deploy হলে এটা বদলান ────
 const API_BASE = 'https://krishokbazar.onrender.com/api';
+
+// const API_BASE = 'http://localhost:8000/api';
+
 const SOCKET_BASE = API_BASE.replace('/api', '');
 let chatSocket = null;
 let chatSocketBound = false;
@@ -551,6 +554,139 @@ function fmtTime(iso) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+function fmtDateBn(date = new Date()) {
+  return date.toLocaleDateString('bn-BD', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function weatherInfo(code) {
+  const map = {
+    0: ['☀️', 'পরিষ্কার আকাশ'],
+    1: ['🌤️', 'প্রধানত পরিষ্কার'],
+    2: ['⛅', 'আংশিক মেঘলা'],
+    3: ['☁️', 'মেঘলা'],
+    45: ['🌫️', 'কুয়াশা'],
+    48: ['🌫️', 'ঘন কুয়াশা'],
+    51: ['🌦️', 'হালকা গুঁড়ি বৃষ্টি'],
+    53: ['🌦️', 'গুঁড়ি বৃষ্টি'],
+    55: ['🌧️', 'ঘন গুঁড়ি বৃষ্টি'],
+    61: ['🌧️', 'হালকা বৃষ্টি'],
+    63: ['🌧️', 'বৃষ্টি'],
+    65: ['🌧️', 'ভারী বৃষ্টি'],
+    80: ['🌦️', 'হালকা ঝড়ো বৃষ্টি'],
+    81: ['🌧️', 'ঝড়ো বৃষ্টি'],
+    82: ['⛈️', 'ভারী ঝড়ো বৃষ্টি'],
+    95: ['⛈️', 'বজ্রঝড়'],
+    96: ['⛈️', 'শিলাসহ বজ্রঝড়'],
+    99: ['⛈️', 'তীব্র বজ্রঝড়'],
+  };
+  return map[Number(code)] || ['🌤️', 'আবহাওয়া আপডেট'];
+}
+
+function farmingWeatherNote(code, rainChance = 0) {
+  const c = Number(code);
+  if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(c) || rainChance >= 60) {
+    return 'বৃষ্টি হতে পারে, ফসল ও পরিবহনে সতর্ক থাকুন';
+  }
+  if ([45, 48].includes(c)) return 'কুয়াশা আছে, সকালের কাজে সতর্ক থাকুন';
+  if ([0, 1, 2].includes(c)) return 'চাষের জন্য ভালো আবহাওয়া';
+  return 'আবহাওয়া মাঝারি, মাঠের কাজ পরিকল্পনা করে করুন';
+}
+
+async function geocodeDistrict(district) {
+  if (!district) return null;
+  try {
+    const q = encodeURIComponent(`${district}, Bangladesh`);
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=1&language=en&format=json`);
+    const body = await res.json();
+    const place = body?.results?.[0];
+    if (!place) return null;
+    return {
+      latitude: place.latitude,
+      longitude: place.longitude,
+      label: place.name || district,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function resolveWeatherLocation(user) {
+  if (hasSavedLocation(user)) {
+    return {
+      latitude: Number(user.latitude),
+      longitude: Number(user.longitude),
+      label: user.district || 'আপনার লোকেশন',
+    };
+  }
+  return geocodeDistrict(user?.district);
+}
+
+function renderFarmerWeatherLoading(user) {
+  const locEl = document.querySelector('#page-farmer .ww-loc');
+  const descEl = document.querySelector('#page-farmer .ww-desc');
+  if (locEl) locEl.textContent = `📍 ${user?.district || 'লোকেশন'} — আবহাওয়া লোড হচ্ছে...`;
+  if (descEl) descEl.textContent = 'লাইভ আবহাওয়া তথ্য আনা হচ্ছে...';
+}
+
+async function loadFarmerWeather(user) {
+  renderFarmerWeatherLoading(user);
+  const loc = await resolveWeatherLocation(user);
+  const locEl = document.querySelector('#page-farmer .ww-loc');
+  const iconEl = document.querySelector('#page-farmer .ww-icon');
+  const tempEl = document.querySelector('#page-farmer .ww-temp');
+  const descEl = document.querySelector('#page-farmer .ww-desc');
+  const detailVals = document.querySelectorAll('#page-farmer .ww-detail .wd-val');
+  const forecastEl = document.querySelector('#page-farmer .ww-forecast');
+
+  if (!loc) {
+    if (locEl) locEl.textContent = '📍 লোকেশন নেই — কৃষি আবহাওয়া পূর্বাভাস';
+    if (descEl) descEl.textContent = 'সঠিক আবহাওয়ার জন্য নিজের লোকেশন সেভ করুন।';
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      current: 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m',
+      daily: 'weather_code,temperature_2m_max,precipitation_probability_max',
+      timezone: 'auto',
+      forecast_days: '7',
+    });
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    const data = await res.json();
+    const current = data.current || {};
+    const rainChance = data.daily?.precipitation_probability_max?.[0] ?? 0;
+    const [icon, desc] = weatherInfo(current.weather_code);
+
+    if (locEl) locEl.textContent = `📍 ${loc.label} — লাইভ কৃষি আবহাওয়া`;
+    if (iconEl) iconEl.textContent = icon;
+    if (tempEl) tempEl.textContent = `${Math.round(current.temperature_2m || 0).toLocaleString('bn-BD')}°C`;
+    if (descEl) descEl.textContent = `${desc} · ${farmingWeatherNote(current.weather_code, rainChance)}`;
+    if (detailVals[0]) detailVals[0].textContent = `${Math.round(current.relative_humidity_2m || 0).toLocaleString('bn-BD')}%`;
+    if (detailVals[1]) detailVals[1].textContent = `${Math.round(current.wind_speed_10m || 0).toLocaleString('bn-BD')}km/h`;
+    if (detailVals[2]) detailVals[2].textContent = `${Math.round(rainChance).toLocaleString('bn-BD')}%`;
+
+    if (forecastEl && data.daily?.time?.length) {
+      forecastEl.innerHTML = data.daily.time.map((day, idx) => {
+        const d = new Date(day);
+        const label = idx === 0 ? 'আজ' : d.toLocaleDateString('bn-BD', { weekday: 'short' });
+        const [dayIcon] = weatherInfo(data.daily.weather_code?.[idx]);
+        const temp = Math.round(data.daily.temperature_2m_max?.[idx] || 0).toLocaleString('bn-BD');
+        return `<div class="wf-day"><div class="d-name">${label}</div><div class="d-icon">${dayIcon}</div><div class="d-temp">${temp}°</div></div>`;
+      }).join('');
+    }
+  } catch {
+    if (locEl) locEl.textContent = `📍 ${loc.label} — আবহাওয়া আপডেট হয়নি`;
+    if (descEl) descEl.textContent = 'লাইভ আবহাওয়া আনতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।';
+  }
+}
+
 function hasSavedLocation(user = Auth.user()) {
   return Number.isFinite(Number(user?.latitude)) && Number.isFinite(Number(user?.longitude));
 }
@@ -707,12 +843,23 @@ async function loadAllProducts(filters = {}) {
 }
 
 async function loadFarmerDashboard() {
-  const user = Auth.user();
+  let user = Auth.user();
   if (!user) return;
+  const freshUser = await apiGetMe();
+  if (freshUser) {
+    Auth.save(Auth.token(), { ...user, ...freshUser });
+    user = Auth.user();
+  }
   const nameEl = document.querySelector('#page-farmer .sb-name');
   const roleEl = document.querySelector('#page-farmer .sb-role');
-  if (nameEl) nameEl.textContent = `${user.first_name} ${user.last_name || ''}`;
+  const headTitle = document.querySelector('#page-farmer .d-head h1');
+  const headSub = document.querySelector('#page-farmer .d-head p');
+  const fullName = formatUserName(user);
+  if (nameEl) nameEl.textContent = fullName;
   if (roleEl) roleEl.textContent = `কৃষক · ${user.district || ''}`;
+  if (headTitle) headTitle.textContent = `স্বাগতম, ${user.first_name || fullName} ভাই! 👋`;
+  if (headSub) headSub.textContent = `${fmtDateBn()} · ${user.district || 'লোকেশন সেট করা নেই'}`;
+  loadFarmerWeather(user);
 
   const orders  = await apiIncomingOrders();
   const myProds = await apiMyProducts();
