@@ -341,8 +341,13 @@ function appendChatMessage(message) {
 // ================================================================
 //  7. DATA HELPERS
 // ================================================================
+function productImageUrl(image, category) {
+  if (!image) return catFallbackImg(category);
+  if (/^https?:\/\//i.test(image)) return image;
+  return `${API_BASE.replace('/api', '')}/uploads/${image}`;
+}
+
 function apiProductToCard(p) {
-  const imgBase = `${API_BASE.replace('/api', '')}/uploads/`;
   return {
     id:       p.id,
     name:     p.name,
@@ -356,7 +361,7 @@ function apiProductToCard(p) {
     bg:       catBg(p.category_name),
     organic:  p.is_organic,
     verified: p.farmer_verified,
-    img:      p.image ? `${imgBase}${p.image}` : catFallbackImg(p.category_name),
+    img:      productImageUrl(p.image, p.category_name),
     farmerId: p.farmer_id,
   };
 }
@@ -382,7 +387,7 @@ function toCardProduct(p) {
     bg: catBg(p.category_name),
     organic: p.is_organic,
     verified: p.farmer_verified,
-    img: p.image ? `${API_BASE.replace('/api', '')}/uploads/${p.image}` : catFallbackImg(p.category_name),
+    img: productImageUrl(p.image, p.category_name),
     farmerId: p.farmer_id,
   };
 }

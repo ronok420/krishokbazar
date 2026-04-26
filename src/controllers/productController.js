@@ -1,5 +1,6 @@
 // src/controllers/productController.js
 const pool = require('../config/db');
+const { uploadToCloudinary } = require('../config/cloudinary');
 
 // ── সব পণ্য ──────────────────────────────────────────
 // GET /api/products
@@ -84,9 +85,8 @@ async function createProduct(req, res) {
   if (!name || !price_per_kg || !quantity_kg)
     return res.status(400).json({ error: 'নাম, দাম ও পরিমাণ আবশ্যক।' });
 
-  const image = req.file ? req.file.filename : null;
-
   try {
+    const image = req.file ? await uploadToCloudinary(req.file) : null;
     const { rows } = await pool.query(
       `INSERT INTO products
          (farmer_id, category_id, name, description, image, price_per_kg,
@@ -115,7 +115,7 @@ async function updateProduct(req, res) {
     if (check.rows[0].farmer_id !== req.user.id)
       return res.status(403).json({ error: 'এই পণ্য আপনার নয়।' });
 
-    const image = req.file ? req.file.filename : undefined;
+    const image = req.file ? await uploadToCloudinary(req.file) : undefined;
     const { rows } = await pool.query(
       `UPDATE products SET
          name         = COALESCE($1, name),
